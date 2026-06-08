@@ -1,0 +1,59 @@
+# ─── rokhdad FIT — Caddy Reverse Proxy ─────────────────────────
+# Replace domain names with your actual domains before deploying.
+# Caddy will automatically provision HTTPS certificates via Let's Encrypt.
+# ─────────────────────────────────────────────────────────────────
+
+# Athlete PWA — main domain
+{$SITE_DOMAIN:rokhdad.click} {
+	reverse_proxy athlete-pwa:3000
+
+	# Cache static assets aggressively
+	@static path *.js *.css *.woff2 *.woff *.ttf *.ico *.svg *.png *.jpg *.webp
+	header @static Cache-Control "public, max-age=31536000, immutable"
+
+	# Health check endpoint — no caching
+	@health path /api/health
+	header @health Cache-Control "no-cache, no-store, must-revalidate"
+
+	# Security headers (supplementing Next.js headers)
+	header {
+		# Remove server information
+		-Server
+	}
+
+	# Compression
+	encode gzip zstd
+
+	# Logging
+	log {
+		output stdout
+		format json
+	}
+}
+
+# Admin Panel — subdomain
+{$ADMIN_DOMAIN:admin.rokhdad.click} {
+	reverse_proxy adminpanel:3001
+
+	# Security headers
+	header {
+		# Remove server information
+		-Server
+	}
+
+	# Compression
+	encode gzip zstd
+
+	# Logging
+	log {
+		output stdout
+		format json
+	}
+}
+
+# Supabase API — internal routing (optional: expose on subdomain)
+# Uncomment when you need direct Supabase API access from clients:
+# {$SUPABASE_DOMAIN:api.rokhdad.click} {
+#     reverse_proxy kong:8000
+#     encode gzip zstd
+# }

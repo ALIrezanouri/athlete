@@ -1,0 +1,197 @@
+# ─── Production Docker Compose ──────────────────────────────────
+# Usage: docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+#
+# This overlay adds:
+#   - Athlete PWA (Next.js standalone)
+#   - Admin Panel (Next.js standalone)
+#   - Caddy reverse proxy (auto-HTTPS)
+#   - Production resource limits & logging
+#   - Backup sidecar for PostgreSQL
+# ─────────────────────────────────────────────────────────────────
+
+services:
+  # ─── Caddy Reverse Proxy ───────────────────────────────────────
+  caddy:
+    image: caddy:2-alpine
+    container_name: rokhdad-caddy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      athlete-pwa:
+        condition: service_healthy
+      adminpanel:
+        condition: service_healthy
+    networks:
+      - rokhdad-net
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # ─── Athlete PWA ───────────────────────────────────────────────
+  athlete-pwa:
+    build:
+      context: ./athlete-pwa
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL:-http://kong:8000}
+        NEXT_PUBLIC_SUPABASE_ANON_KEY: ${SUPABASE_ANON_KEY:-}
+        NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY:-}
+    container_name: rokhdad-athlete-pwa
+    restart: unless-stopped
+    expose:
+      - "3000"
+    environment:
+      NODE_ENV: production
+      NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL:-http://kong:8000}
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${SUPABASE_ANON_KEY:-}
+      SUPABASE_SERVICE_ROLE_KEY: ${SUPABASE_SERVICE_KEY:-}
+    networks:
+      - rokhdad-net
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+
+  # ─── Admin Panel ───────────────────────────────────────────────
+  adminpanel:
+    build:
+      context: ./adminpanel
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL:-http://kong:8000}
+        NEXT_PUBLIC_SUPABASE_ANON_KEY: ${SUPABASE_ANON_KEY:-}
+    container_name: rokhdad-adminpanel
+    restart: unless-stopped
+    expose:
+      - "3001"
+    environment:
+      NODE_ENV: production
+      NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL:-http://kong:8000}
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${SUPABASE_ANON_KEY:-}
+      SUPABASE_SERVICE_ROLE_KEY: ${SUPABASE_SERVICE_KEY:-}
+    networks:
+      - rokhdad-net
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+
+  # ─── Production overrides for Supabase services ────────────────
+
+  db:
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "5"
+    networks:
+      - rokhdad-net
+
+  kong:
+    expose:
+      - "8000"
+    networks:
+      - rokhdad-net
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  auth:
+    environment:
+      GOTRUE_SITE_URL: ${SITE_URL:-https://rokhdad.click}
+      GOTRUE_URI_ALLOW_LIST: ${SITE_URL:-https://rokhdad.click},${ADMIN_URL:-https://admin.rokhdad.click}
+      GOTRUE_MAILER_AUTOCONFIRM: ${MAILER_AUTOCONFIRM:-false}
+      GOTRUE_SMS_PROVIDER: ${SMS_PROVIDER:-}
+      GOTRUE_SMS_KAVENEGAR_API_KEY: ${SMS_KAVENEGAR_API_KEY:-}
+      GOTRUE_SMS_KAVENEGAR_TEMPLATE: ${SMS_KAVENEGAR_TEMPLATE:-}
+    networks:
+      - rokhdad-net
+
+  rest:
+    networks:
+      - rokhdad-net
+
+  realtime:
+    networks:
+      - rokhdad-net
+
+  storage:
+    networks:
+      - rokhdad-net
+
+  imgproxy:
+    networks:
+      - rokhdad-net
+
+  # Disable Studio and Inbucket in production
+  studio:
+    profiles:
+      - debug
+    networks:
+      - rokhdad-net
+
+  inbucket:
+    profiles:
+      - debug
+    networks:
+      - rokhdad-net
+
+  meta:
+    profiles:
+      - debug
+    networks:
+      - rokhdad-net
+
+  # ─── Database Backup Sidecar ───────────────────────────────────
+  db-backup:
+    image: postgres:15-alpine
+    container_name: rokhdad-db-backup
+    restart: unless-stopped
+    volumes:
+      - ./backups:/backups
+    environment:
+      PGPASSWORD: ${POSTGRES_PASSWORD:-postgres}
+    entrypoint: >
+      sh -c "
+        while true; do
+          DATE=$$(date +%Y%m%d_%H%M%S)
+          pg_dump -h db -U postgres -Fc postgres > /backups/rokhdad_$$DATE.dump
+          echo \"Backup created: rokhdad_$$DATE.dump\"
+          # Keep only last 7 days of backups
+          find /backups -name 'rokhdad_*.dump' -mtime +7 -delete
+          sleep 86400
+        done
+      "
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - rokhdad-net
+
+networks:
+  rokhdad-net:
+    driver: bridge
+
+volumes:
+  caddy_data:
+  caddy_config:
