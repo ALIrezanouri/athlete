@@ -1,0 +1,186 @@
+# A string used to distinguish different Supabase projects on the same host. Defaults to the
+# working directory name when running `supabase init`.
+project_id = "rokhdad-fit"
+
+[api]
+enabled = true
+# Port to use for the API URL.
+port = 54421
+# Schemas to expose in your API. Tables, views and stored procedures in this schema will get API
+# endpoints. `public` is always included.
+schemas = ["public"]
+# Extra schemas to add to the search_path of every request. `public` is always included.
+extra_search_path = ["public"]
+# The maximum number of rows returns from a view that is unpaginated. You can specify views
+# with `<schema>.<view>` to target specific views.
+max_rows = 1000
+
+[api.tls]
+enabled = false
+
+[db]
+# Port to use for the local database URL.
+port = 54422
+# Port used by dbdiff to introspect the database.
+shadow_port = 54420
+# The database major version to use. This has to be the same as your remote database's. Run `SHOW
+# server_version;` on the remote database to check.
+major_version = 15
+
+[db.pooler]
+enabled = false
+# Port to use for the local connection pooler.
+port = 54429
+# Specifies when a server connection can be reused by other clients.
+# Configure one of the supported pooler modes: `transaction`, `session`.
+pool_mode = "transaction"
+# How many server connections to allow per user/database pair.
+default_pool_size = 20
+# Maximum number of client connections allowed.
+max_client_conn = 100
+
+[realtime]
+enabled = true
+# Bind realtime via either IPv4 or IPv6. (default: IPv4)
+# ip_version = "IPv6"
+# The maximum length in bytes of HTTP request headers. (default: 4096)
+# max_header_length = 4096
+
+[studio]
+enabled = true
+# Port to use for Supabase Studio.
+port = 54423
+# External URL of the API server that frontend connects to, can be used to customize the hostname.
+# api_url = "http://localhost"
+# OpenAI API Key to use for Supabase AI in the Supabase Studio.
+# openai_api_key = "env(OPENAI_API_KEY)"
+
+# Email testing server. Emails sent with the local dev setup are not actually sent - rather, they
+# are retained, and you can view the emails that would have been sent from the webhook interface.
+[inbucket]
+enabled = true
+# Port to use for the email testing server web interface.
+port = 54424
+# Uncomment to expose additional ports for the user
+# smtp_port = 54325
+# pop3_port = 54326
+
+[storage]
+enabled = true
+# The maximum file size allowed (e.g. "5MB", "500KB").
+file_size_limit = "50MiB"
+
+[storage.image_transformation]
+enabled = true
+
+# Uncomment to configure local storage buckets
+# [storage.buckets.images]
+# public = false
+# file_size_limit = "50MiB"
+# allowed_mime_types = ["image/png", "image/jpeg"]
+# objects_path = "./images"
+
+[auth]
+enabled = true
+# The base URL of your website. Used as an allow-list for redirects and for constructing URLs used
+# in emails.
+site_url = "http://localhost:3000"
+# A list of *exact* URLs that auth providers are permitted to redirect to post authentication.
+additional_redirect_urls = ["https://localhost:3000"]
+# How long tokens are valid for, in seconds. Defaults to 3600 (1 hour), maximum 604,800 (1 week).
+jwt_expiry = 3600
+# If disabled, the refresh token will never expire.
+enable_refresh_token_rotation = true
+# Allows refresh tokens to be reused after expiry, up to the specified interval in seconds.
+# Requires enable_refresh_token_rotation = true.
+refresh_token_reuse_interval = 10
+# Allow/disallow new user signups to your project.
+enable_signup = true
+# Allow/disallow anonymous sign-ins to your project.
+enable_anonymous_sign_ins = false
+# Allow/disallow testing manual linking of accounts
+enable_manual_linking = false
+
+[auth.email]
+# Allow/disallow new user signups via email to your project.
+enable_signup = true
+# If enabled, a user will be required to confirm any email change on both the old, and new email
+# addresses. If disabled, only the new email is required to confirm.
+double_confirm_changes = true
+# If enabled, you need to confirm your email address before signing in. This is the default
+# behavior.
+enable_confirmations = false
+# If enabled, users can sign in with their email and a phone number starting with "+".
+# Default: false
+# enable_sign_in_with_phone = false
+# If enabled, users will be required to confirm their email address before they can sign in.
+# Default: false
+# secure_email_change_enabled = true
+# Controls the minimum amount of time that must pass between email signup requests.
+# Default: 60 (seconds)
+# signup_rate_limit = 60
+# Controls the minimum amount of time that must pass between password reset requests.
+# Default: 60 (seconds)
+# reset_password_rate_limit = 60
+# Controls the minimum amount of time that must pass between email OTP requests.
+# Default: 60 (seconds)
+# otp_rate_limit = 60
+# When enabled, the user's email address will be stored in the `email` column of the `auth.users`
+# table. This is useful if you want to query users by email.
+# Default: true
+# update_email_verified_at_on_sign_in = true
+
+# Uncomment to customize email template
+# [auth.email.template.invite]
+# subject = "You have been invited"
+# content_path = "./supabase/templates/invite.html"
+
+[auth.sms]
+# Allow/disallow new user signups via SMS to your project.
+enable_signup = true
+# If enabled, users need to confirm their phone number before signing in.
+enable_confirmations = false
+# Template for sending OTP to users
+# template = "Your code is {{ .Code }} ."
+# Controls the minimum amount of time that must pass between SMS OTP requests.
+# otp_rate_limit = 60
+# Twilio Verify integration
+# [auth.sms.twilio_verify]
+# enabled = true
+# account_sid = ""
+# message_service_sid = ""
+# auth_token = "env(SUPABASE_AUTH_SMS_TWILIO_VERIFY_AUTH_TOKEN)"
+
+# Use an external OAuth provider. The full list of providers are: `apple`, `azure`, `bitbucket`,
+# `discord`, `facebook`, `github`, `gitlab`, `google`, `keycloak`, `linkedin_oidc`, `notion`,
+# `twitch`, `twitter`, `slack`, `spotify`, `workos`, `zoom`.
+# [auth.external.apple]
+# enabled = true
+# client_id = ""
+# secret = "env(SUPABASE_AUTH_EXTERNAL_APPLE_SECRET)"
+# redirect_uri = "http://localhost:54321/auth/v1/callback"
+# url = ""
+
+[auth.mfa]
+# Control whether MFA is enabled for your project.
+# enabled = true
+
+[auth.mfa.totp]
+# Control whether TOTP MFA is enabled for your project.
+# enabled = true
+# Number of digits in the TOTP code.
+# digits = 6
+# Number of seconds that a TOTP code is valid for.
+# step = 30
+
+[edge_runtime]
+enabled = true
+# Configure one of the supported inspection protocols: `webinspector` (for Safari/Chrome), `ndb`
+# (for Node.js). Not setting this value means the inspector will not be available.
+# inspector_protocol = "webinspector"
+
+[analytics]
+enabled = true
+port = 54427
+# Configure one of the supported backends: `postgres`, `bigquery`.
+backend = "postgres"
