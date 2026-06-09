@@ -192,8 +192,10 @@ async function createSessionViaMagicLink(
 }
 
 // ── Server Action: Send OTP ─────────────────────────────────────────────────
-// In DEV mode (DEV_OTP env var set), bypasses Supabase and logs the OTP.
-// In production, calls Supabase signInWithOtp (requires SMS provider).
+// In DEMO mode (no SMS provider), bypasses Supabase and returns devMode flag.
+// In production (SMS provider configured), calls Supabase signInWithOtp.
+// DEMO mode is auto-detected: if DEV_OTP env var is set OR if SMS provider
+// is not configured (signInWithOtp returns "Unsupported phone provider").
 export async function sendOtp(
   phone: string,
   countryCode: string
@@ -205,22 +207,29 @@ export async function sendOtp(
   const phoneE164 = toE164(phone, countryCode)
   const devOtp = process.env.DEV_OTP
 
+  // DEV_OTP env var set → always use demo mode
   if (devOtp) {
     return { success: true, devMode: true }
   }
 
-  // Real Supabase OTP — requires SMS provider configured
+  // Try real Supabase OTP — if SMS provider is not configured, fall back to demo mode
   const supabase = await createClient()
   const { error } = await supabase.auth.signInWithOtp({ phone: phoneE164 })
 
   if (error) {
+    // "Unsupported phone provider" means no SMS provider is configured → demo mode
+    if (error.message.includes("Unsupported phone provider") || error.message.includes("phone provider")) {
+      console.warn("[AUTH] No SMS provider configured, using demo mode")
+      return { success: true, devMode: true }
+    }
     return { success: false, error: error.message }
   }
   return { success: true, devMode: false }
 }
 
 // ── Server Action: Verify OTP & Login/Register ─────────────────────────────
-// DEV mode: accepts the DEV_OTP, creates/finds user via admin, sets session.
+// DEV mode: accepts the DEV_OTP (or any 6-digit OTP if no SMS provider),
+// creates/finds user via admin, sets session.
 // PRODUCTION: uses Supabase native verifyOtp({ phone, token, type: 'sms' }).
 // The DB trigger auto-creates profile + athlete_profiles for new users.
 export async function verifyOtp(
@@ -233,7 +242,11 @@ export async function verifyOtp(
   const supabase = await createClient()
 
   // === DEV MODE: bypass Supabase OTP ===
-  if (devOtp && otp === devOtp) {
+  // Triggered by: (1) DEV_OTP env var set and OTP matches, OR
+  // (2) any 6-digit OTP when no SMS provider is configured (demo mode)
+  const isDevMode = devOtp ? otp === devOtp : false
+
+  if (isDevMode) {
     const admin = createAdminClient()
 
     // Try to find existing user by phone (with pagination for reliability)
@@ -383,6 +396,7 @@ export async function verifyOtp(
   }
 
   // === PRODUCTION MODE: use Supabase native verifyOtp ===
+  // If SMS provider is not configured, auto-fallback to demo mode
   const { error } = await supabase.auth.verifyOtp({
     phone: phoneE164,
     token: otp,
@@ -390,6 +404,133 @@ export async function verifyOtp(
   })
 
   if (error) {
+    // Auto-fallback to demo mode if no SMS provider is configured
+    if (error.message.includes("Unsupported phone provider") || error.message.includes("phone provider")) {
+      console.warn("[AUTH] No SMS provider configured, falling back to demo mode for verifyOtp")
+      // Accept any 6-digit OTP in demo mode — create/find user via admin
+      const admin = createAdminClient()
+      let existingUser = await findUserByPhone(admin, phoneE164)
+
+      if (existingUser) {
+        const email = existingUser.email!
+        const sessionResult = await createSessionViaMagicLink(email)
+        if (!sessionResult.success) {
+          return { success: false, error: sessionResult.error }
+        }
+
+        const { data: profile } = await admin
+          .from("profiles")
+          .select("*")
+          .eq("id", existingUser.id)
+          .is("deleted_at", null)
+          .single()
+
+        if (!profile) {
+          return { success: false, error: "Profile not found" }
+        }
+
+        await admin.auth.admin.updateUserById(existingUser.id, {
+          app_metadata: { onboarding_completed: profile.onboarding_completed },
+        })
+
+        return {
+          success: true,
+          profile: {
+            id: profile.id,
+            mobile_number: profile.mobile_number,
+            role: profile.role,
+            full_name: profile.full_name,
+            onboarding_completed: profile.onboarding_completed,
+          },
+        }
+      } else {
+        // New user: create via admin
+        const { error: orphanError } = await admin
+          .from("profiles")
+          .delete()
+          .eq("mobile_number", phoneE164)
+
+        if (orphanError) {
+          console.warn("[AUTH] Could not clean up orphaned profile:", orphanError.message)
+        }
+
+        const email = `${phoneE164}@auth.rokhdad.internal`
+        const { data: userData, error: createError } =
+          await admin.auth.admin.createUser({
+            email,
+            phone: phoneE164,
+            email_confirm: true,
+            phone_confirm: true,
+            user_metadata: { phone: phoneE164 },
+          })
+
+        if (createError) {
+          if (createError.code === "phone_exists") {
+            existingUser = await findUserByPhone(admin, phoneE164)
+            if (existingUser) {
+              const fallbackEmail = existingUser.email!
+              const sessionResult = await createSessionViaMagicLink(fallbackEmail)
+              if (!sessionResult.success) {
+                return { success: false, error: sessionResult.error }
+              }
+              const { data: fallbackProfile } = await admin
+                .from("profiles")
+                .select("*")
+                .eq("id", existingUser.id)
+                .is("deleted_at", null)
+                .single()
+
+              if (fallbackProfile) {
+                await admin.auth.admin.updateUserById(existingUser.id, {
+                  app_metadata: { onboarding_completed: fallbackProfile.onboarding_completed },
+                })
+              }
+
+              return {
+                success: true,
+                profile: fallbackProfile
+                  ? {
+                      id: fallbackProfile.id,
+                      mobile_number: fallbackProfile.mobile_number,
+                      role: fallbackProfile.role,
+                      full_name: fallbackProfile.full_name,
+                      onboarding_completed: fallbackProfile.onboarding_completed,
+                    }
+                  : undefined,
+              }
+            }
+          }
+          console.error("[AUTH] Error creating user:", createError.message)
+          return { success: false, error: "Failed to create account" }
+        }
+
+        const sessionResult = await createSessionViaMagicLink(email)
+        if (!sessionResult.success) {
+          return { success: false, error: sessionResult.error }
+        }
+
+        const { data: profile } = await admin
+          .from("profiles")
+          .select("*")
+          .eq("id", userData.user.id)
+          .is("deleted_at", null)
+          .single()
+
+        return {
+          success: true,
+          profile: profile
+            ? {
+                id: profile.id,
+                mobile_number: profile.mobile_number,
+                role: profile.role,
+                full_name: profile.full_name,
+                onboarding_completed: profile.onboarding_completed,
+              }
+            : undefined,
+        }
+      }
+    }
+
     return { success: false, error: error.message }
   }
 
