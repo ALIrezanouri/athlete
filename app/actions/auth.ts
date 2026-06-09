@@ -235,7 +235,8 @@ export async function sendOtp(
 export async function verifyOtp(
   phone: string,
   otp: string,
-  countryCode: string = "IR"
+  countryCode: string = "IR",
+  devMode: boolean = false
 ): Promise<AuthResult> {
   const phoneE164 = toE164(phone, countryCode)
   const devOtp = process.env.DEV_OTP
@@ -243,8 +244,8 @@ export async function verifyOtp(
 
   // === DEV MODE: bypass Supabase OTP ===
   // Triggered by: (1) DEV_OTP env var set and OTP matches, OR
-  // (2) any 6-digit OTP when no SMS provider is configured (demo mode)
-  const isDevMode = devOtp ? otp === devOtp : false
+  // (2) devMode flag passed from client (sendOtp detected no SMS provider)
+  const isDevMode = devMode || (devOtp ? otp === devOtp : false)
 
   if (isDevMode) {
     const admin = createAdminClient()

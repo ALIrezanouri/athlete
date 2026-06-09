@@ -77,6 +77,7 @@ export default function LoginPage() {
   const [successMsg, setSuccessMsg] = useState<string | null>(null)
   const [otpCooldown, setOtpCooldown] = useState(0)
   const [shakeError, setShakeError] = useState(false)
+  const [isDevMode, setIsDevMode] = useState(false)
 
   // Transitions
   const [isSending, startSendTransition] = useTransition()
@@ -128,6 +129,7 @@ export default function LoginPage() {
         setDirection(1)
         setStep("otp")
         setOtpCooldown(120)
+        setIsDevMode(result.devMode ?? false)
         setSuccessMsg(result.devMode ? `DEV MODE — OTP: ${process.env.NEXT_PUBLIC_DEV_OTP_HINT ?? "check console"}` : t("login.otp_sent"))
       } else {
         setError(result.error ?? t("login.invalid_phone"))
@@ -148,7 +150,7 @@ export default function LoginPage() {
     const trimmedPhone = phone.replace(/\s/g, "")
 
     startVerifyTransition(async () => {
-      const result = await verifyOtp(trimmedPhone, otp, selectedCountry)
+      const result = await verifyOtp(trimmedPhone, otp, selectedCountry, isDevMode)
       if (result.success) {
         const session: UserSession = {
           id: result.profile!.id,
