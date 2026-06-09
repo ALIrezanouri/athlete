@@ -2,7 +2,7 @@ import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
 /** Public paths that don't require authentication */
-const PUBLIC_PATHS = ['/login', '/design-system', '/global-demo']
+const PUBLIC_PATHS = ['/login', '/design-system', '/global-demo', '/offline', '/api/health']
 
 /** Timeout wrapper — prevents auth check from blocking navigation */
 function withTimeout<T>(
