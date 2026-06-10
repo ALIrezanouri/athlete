@@ -6,7 +6,8 @@ import { motion, AnimatePresence } from 'motion/react';
 import { getFeed, likeWorkout, unlikeWorkout, addComment, getComments } from '@/app/actions/social';
 import { useInfiniteScroll } from '@/lib/hooks/useInfiniteScroll';
 import { ShareableCard } from '@/components/ui/shareable-card';
-import { Share2, X, MessageCircle, Heart } from 'lucide-react';
+import { Share2, X, MessageCircle, Heart, Sparkles } from 'lucide-react';
+import { getVolumeComparison } from '@/lib/gamification/engine';
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -159,8 +160,8 @@ export default function CommunityPage() {
       {/* Feed */}
       <div className="max-w-lg mx-auto px-4 py-4 space-y-4">
         {loading ? (
-          <div className="flex items-center justify-center py-20">
-            <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+          <div className="space-y-4">
+            {[1, 2, 3].map(i => <div key={i} className="skeleton h-64 rounded-2xl" />)}
           </div>
         ) : feed.length === 0 ? (
           <div className="text-center py-20">
@@ -175,108 +176,118 @@ export default function CommunityPage() {
             animate="show"
             className="space-y-4"
           >
-            {feed.map(workout => (
-              <motion.div
-                key={workout.id}
-                variants={itemVariants}
-                className="glass-card overflow-hidden"
-              >
-                {/* User header — clickable to public profile */}
-                <div className="flex items-center justify-between px-4 py-3">
-                  <Link href={`/profile/${workout.user_id}`} className="flex items-center gap-3 hover:opacity-80 transition-opacity">
-                    <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary text-sm font-bold shrink-0">
-                      {workout.profiles?.full_name?.charAt(0) || '?'}
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium">{workout.profiles?.full_name || 'کاربر'}</p>
-                      <p className="text-xs text-foreground/40">{formatTimeAgo(workout.shared_at || workout.start_time)}</p>
-                    </div>
-                  </Link>
-                  <button
-                    onClick={() => setSharingWorkout(workout)}
-                    className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-foreground/40 hover:text-primary transition-colors"
-                  >
-                    <Share2 className="w-4 h-4" />
-                  </button>
-                </div>
+            {feed.map(workout => {
+              const comp = getVolumeComparison(workout.total_volume);
+              const isHeavy = workout.total_volume >= 1000;
 
-                {/* Workout info */}
-                <div className="px-4 pb-3">
-                  <h3 className="font-bold text-base mb-2">{workout.name}</h3>
-                  <div className="flex gap-4 text-xs text-foreground/50 mb-3">
-                    <span>⏱ {formatDuration(workout.duration_seconds)}</span>
-                    <span>🏋️ {formatNumber(workout.total_volume)} kg حجم</span>
-                    <span>🔢 {workout.total_sets} ست</span>
-                  </div>
-
-                  {/* Exercises summary */}
-                  <div className="space-y-1.5">
-                    {workout.workout_exercises?.slice(0, 5).map(ex => (
-                      <div key={ex.id} className="flex items-center justify-between text-xs bg-white/[0.03] rounded-lg px-3 py-2">
-                        <span className="text-foreground/70">{ex.exercise_name}</span>
-                        <span className="text-foreground/35">
-                          {ex.workout_sets?.length} ست • بیشترین{' '}
-                          {Math.max(...(ex.workout_sets?.map(s => s.weight_kg) || [0]))} kg
-                        </span>
+              return (
+                <motion.div
+                  key={workout.id}
+                  variants={itemVariants}
+                  className="glass-card overflow-hidden"
+                >
+                  {/* User header */}
+                  <div className="flex items-center justify-between px-4 py-3">
+                    <Link href={`/profile/${workout.user_id}`} className="flex items-center gap-3 hover:opacity-80 transition-opacity">
+                      <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary text-sm font-bold shrink-0">
+                        {workout.profiles?.full_name?.charAt(0) || '?'}
                       </div>
-                    ))}
-                    {workout.workout_exercises?.length > 5 && (
-                      <p className="text-xs text-foreground/30 text-center">
-                        + {workout.workout_exercises.length - 5} حرکت دیگر
-                      </p>
-                    )}
-                  </div>
-                </div>
-
-                {/* Actions */}
-                <div className="flex items-center gap-1 px-4 py-2.5 border-t border-white/5">
-                  <button
-                    onClick={() => toggleLike(workout.id, !!workout.user_liked)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs transition-all"
-                    style={{
-                      background: workout.user_liked ? 'rgba(255,107,107,0.15)' : 'rgba(255,255,255,0.05)',
-                      color: workout.user_liked ? '#FF6B6B' : 'rgba(255,255,255,0.4)'
-                    }}
-                  >
-                    <Heart className={`w-3.5 h-3.5 ${workout.user_liked ? 'fill-current' : ''}`} /> {workout.like_count}
-                  </button>
-                  <button
-                    onClick={() => toggleComments(workout.id)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs bg-white/5 text-foreground/40 transition-colors hover:bg-white/10"
-                  >
-                    <MessageCircle className="w-3.5 h-3.5" /> {workout.comment_count}
-                  </button>
-                </div>
-
-                {/* Comments section */}
-                {expandedComments[workout.id] && (
-                  <div className="border-t border-white/5 px-4 py-3 space-y-2">
-                    {commentsData[workout.id]?.map((c: any) => (
-                      <div key={c.id} className="text-xs">
-                        <span className="font-medium text-success">{c.profiles?.full_name}: </span>
-                        <span className="text-foreground/60">{c.comment}</span>
+                      <div>
+                        <p className="text-sm font-medium">{workout.profiles?.full_name || 'کاربر'}</p>
+                        <p className="text-xs text-foreground/40">{formatTimeAgo(workout.shared_at || workout.start_time)}</p>
                       </div>
-                    ))}
-                    <div className="flex gap-2 mt-2">
-                      <input
-                        type="text"
-                        value={commentText[workout.id] || ''}
-                        onChange={e => setCommentText(prev => ({ ...prev, [workout.id]: e.target.value }))}
-                        onKeyDown={e => e.key === 'Enter' && submitComment(workout.id)}
-                        placeholder="نظرتان را بنویسید..."
-                        className="flex-1 bg-white/[0.05] rounded-full px-3 py-1.5 text-xs text-foreground placeholder-white/25 outline-none focus:ring-1 focus:ring-primary"
-                      />
-                      <button
-                        onClick={() => submitComment(workout.id)}
-                        className="text-primary text-xs font-medium px-2"
-                      >
-                        ارسال
-                      </button>
+                    </Link>
+                    <button
+                      onClick={() => setSharingWorkout(workout)}
+                      className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-foreground/40 hover:text-primary transition-colors"
+                    >
+                      <Share2 className="w-4 h-4" />
+                    </button>
+                  </div>
+
+                  {/* Gamification Badge (Achievement) */}
+                  {isHeavy && (
+                    <div className="mx-4 mb-3 px-3 py-2 rounded-xl bg-warning/10 border border-warning/20 flex items-center gap-2">
+                      <Sparkles className="w-4 h-4 text-warning" />
+                      <span className="text-[10px] font-bold text-warning uppercase tracking-wider">
+                        دستاورد حجیم: معادل {comp.count.toLocaleString('fa-IR')} {comp.object} {comp.emoji}
+                      </span>
+                    </div>
+                  )}
+
+                  {/* Workout info */}
+                  <div className="px-4 pb-3">
+                    <h3 className="font-bold text-base mb-2">{workout.name}</h3>
+                    <div className="flex gap-4 text-xs text-foreground/50 mb-3">
+                      <span>⏱ {formatDuration(workout.duration_seconds)}</span>
+                      <span className={isHeavy ? "text-warning font-bold" : ""}>🏋️ {formatNumber(workout.total_volume)} kg حجم</span>
+                      <span>🔢 {workout.total_sets} ست</span>
+                    </div>
+
+                    {/* Exercises summary */}
+                    <div className="space-y-1.5">
+                      {workout.workout_exercises?.slice(0, 5).map(ex => (
+                        <div key={ex.id} className="flex items-center justify-between text-xs bg-white/[0.03] rounded-lg px-3 py-2">
+                          <span className="text-foreground/70">{ex.exercise_name}</span>
+                          <span className="text-foreground/35">
+                            {ex.workout_sets?.length} ست • بیشترین{' '}
+                            {Math.max(...(ex.workout_sets?.map(s => s.weight_kg) || [0]))} kg
+                          </span>
+                        </div>
+                      ))}
                     </div>
                   </div>
-                )}
-              </motion.div>
-            ))}
+
+                  {/* Actions */}
+                  <div className="flex items-center gap-1 px-4 py-2.5 border-t border-white/5">
+                    <button
+                      onClick={() => toggleLike(workout.id, !!workout.user_liked)}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs transition-all"
+                      style={{
+                        background: workout.user_liked ? 'rgba(255,107,107,0.15)' : 'rgba(255,255,255,0.05)',
+                        color: workout.user_liked ? '#FF6B6B' : 'rgba(255,255,255,0.4)'
+                      }}
+                    >
+                      <Heart className={`w-3.5 h-3.5 ${workout.user_liked ? 'fill-current' : ''}`} /> {workout.like_count}
+                    </button>
+                    <button
+                      onClick={() => toggleComments(workout.id)}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs bg-white/5 text-foreground/40 transition-colors hover:bg-white/10"
+                    >
+                      <MessageCircle className="w-3.5 h-3.5" /> {workout.comment_count}
+                    </button>
+                  </div>
+
+                  {/* Comments section */}
+                  {expandedComments[workout.id] && (
+                    <div className="border-t border-white/5 px-4 py-3 space-y-2">
+                      {commentsData[workout.id]?.map((c: any) => (
+                        <div key={c.id} className="text-xs">
+                          <span className="font-medium text-success">{c.profiles?.full_name}: </span>
+                          <span className="text-foreground/60">{c.comment}</span>
+                        </div>
+                      ))}
+                      <div className="flex gap-2 mt-2">
+                        <input
+                          type="text"
+                          value={commentText[workout.id] || ''}
+                          onChange={e => setCommentText(prev => ({ ...prev, [workout.id]: e.target.value }))}
+                          onKeyDown={e => e.key === 'Enter' && submitComment(workout.id)}
+                          placeholder="نظرتان را بنویسید..."
+                          className="flex-1 bg-white/[0.05] rounded-full px-3 py-1.5 text-xs text-foreground placeholder-white/25 outline-none focus:ring-1 focus:ring-primary"
+                        />
+                        <button
+                          onClick={() => submitComment(workout.id)}
+                          className="text-primary text-xs font-medium px-2"
+                        >
+                          ارسال
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </motion.div>
+              );
+            })}
           </motion.div>
         )}
 
@@ -313,6 +324,7 @@ export default function CommunityPage() {
               <ShareableCard
                 type="workout"
                 title={sharingWorkout.name}
+                funFact={`معادل ${getVolumeComparison(sharingWorkout.total_volume).count} ${getVolumeComparison(sharingWorkout.total_volume).object}`}
                 stats={[
                   { label: 'حجم کل', value: `${formatNumber(sharingWorkout.total_volume)} kg` },
                   { label: 'مدت زمان', value: formatDuration(sharingWorkout.duration_seconds) },
@@ -321,10 +333,6 @@ export default function CommunityPage() {
                 userName={sharingWorkout.profiles?.full_name || 'کاربر'}
               />
             </div>
-
-            <p className="text-white/60 text-sm text-center max-w-xs">
-              تصویر تمرین آماده شد! می‌توانید آن را در اینستاگرام یا شبکه‌های دیگر به اشتراک بگذارید.
-            </p>
           </motion.div>
         )}
       </AnimatePresence>

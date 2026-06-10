@@ -2,7 +2,7 @@
 
 import React, { useRef } from "react"
 import { motion } from "motion/react"
-import { Share2, Download, Trophy, Zap, Flame } from "lucide-react"
+import { Share2, Download, Trophy, Zap, Flame, Sparkles } from "lucide-react"
 import { toPng } from "html-to-image"
 
 interface ShareableCardProps {
@@ -14,6 +14,7 @@ interface ShareableCardProps {
   date?: string
   stats?: Array<{ label: string; value: string }>
   userName?: string
+  funFact?: string
 }
 
 export function ShareableCard({
@@ -25,6 +26,7 @@ export function ShareableCard({
   date = new Date().toLocaleDateString("fa-IR"),
   stats,
   userName,
+  funFact,
 }: ShareableCardProps) {
   const cardRef = useRef<HTMLDivElement>(null)
 
@@ -40,7 +42,7 @@ export function ShareableCard({
         await navigator.share({
           files: [file],
           title: "دستاورد من در رخداد فیت",
-          text: `ببین چه رکوردی زدم! ${title}`,
+          text: `ببین چه رکوردی زدم! ${title}${funFact ? ' - ' + funFact : ''}`,
         })
       } else {
         const link = document.createElement("a")
@@ -82,32 +84,43 @@ export function ShareableCard({
 
         {/* Content */}
         <div className="relative flex h-full flex-col items-center justify-between text-center">
-          <div className="mt-8 flex flex-col items-center gap-4">
+          <div className="mt-6 flex flex-col items-center gap-3">
             <div className="rounded-full bg-white/5 p-4 backdrop-blur-xl">
               {getIcon()}
             </div>
-            <h2 className="text-3xl font-black text-white">{title}</h2>
-            {subtitle && <p className="text-lg text-white/60">{subtitle}</p>}
-            {userName && <p className="text-primary font-bold text-sm">توسط {userName}</p>}
+            <h2 className="text-2xl font-black text-white leading-tight">{title}</h2>
+            {subtitle && <p className="text-base text-white/60">{subtitle}</p>}
+            {userName && <p className="text-primary font-bold text-xs">توسط {userName}</p>}
           </div>
+
+          {funFact && (
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              className="px-4 py-3 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-md flex items-center gap-3"
+            >
+              <Sparkles className="w-5 h-5 text-warning shrink-0" />
+              <p className="text-xs font-medium text-white/90 leading-relaxed">{funFact}</p>
+            </motion.div>
+          )}
 
           {value ? (
             <div className="flex flex-col items-center gap-1">
-              <span className="text-6xl font-black text-white">{value}</span>
-              {unit && <span className="text-xl font-medium text-white/40">{unit}</span>}
+              <span className="text-5xl font-black text-white">{value}</span>
+              {unit && <span className="text-lg font-medium text-white/40">{unit}</span>}
             </div>
           ) : stats ? (
             <div className="grid grid-cols-3 gap-4 w-full">
               {stats.map((s, i) => (
                 <div key={i} className="flex flex-col items-center gap-1">
-                  <span className="text-lg font-black text-white">{s.value}</span>
-                  <span className="text-[10px] font-medium text-white/40">{s.label}</span>
+                  <span className="text-base font-black text-white">{s.value}</span>
+                  <span className="text-[9px] font-medium text-white/40">{s.label}</span>
                 </div>
               ))}
             </div>
           ) : null}
 
-          <div className="mb-4 flex w-full items-center justify-between border-t border-white/10 pt-6 text-sm text-white/40">
+          <div className="mb-4 flex w-full items-center justify-between border-t border-white/10 pt-6 text-xs text-white/40">
             <span>{date}</span>
             <div className="flex items-center gap-2">
               <span className="font-bold text-primary">ROKHDAD FIT</span>

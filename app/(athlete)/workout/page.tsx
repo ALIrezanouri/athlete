@@ -21,9 +21,11 @@ import type { WorkoutExercise, WorkoutSet } from "@/app/actions/workouts"
 import {
   Plus, X, Check, Trash2, Search, Dumbbell, Flame, Clock, Trophy,
   Zap, Play, ChevronLeft, Calendar, BarChart3, FolderOpen, Sparkles,
-  Timer, ArrowLeft,
+  Timer, ArrowLeft, Share2,
 } from "lucide-react"
 import Link from "next/link"
+import { getFunFact } from "@/lib/gamification/engine"
+import { ShareableCard } from "@/components/ui/shareable-card"
 
 // ── Animation Variants ──
 const containerVariants = {
@@ -424,7 +426,7 @@ function SetRow({ set, previousSet, isPR, onUpdate, onDelete, onCheck }: {
           {set.set_number}
         </span>
         <span className="text-[10px] w-14 text-center truncate">
-          {previousSet ? <span className="text-foreground/25">{prevWeight > 0 ? `${prevWeight}×${prevReps}` : "—"}</span> : <span className="text-foreground/10">—</span>}
+          {previousSet ? <span className="text-foreground/25">{`${prevWeight}×${prevReps}`}</span> : <span className="text-foreground/10">—</span>}
         </span>
         <input type="number" value={weight} onChange={(e) => setWeight(e.target.value)}
           onBlur={() => onUpdate(set.id, { weightKg: parseFloat(weight) || 0 })}
@@ -502,11 +504,19 @@ function ActiveWorkout({
   const router = useRouter()
   const [showPicker, setShowPicker] = useState(false)
   const [showComplete, setShowComplete] = useState(false)
+  const [funFact, setFunFact] = useState("")
+  const [showSharing, setShowSharing] = useState(false)
 
   const formatElapsed = (s: number) => {
     const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), sec = s % 60
     return h > 0 ? `${h}:${m.toString().padStart(2, "0")}:${sec.toString().padStart(2, "0")}` : `${m}:${sec.toString().padStart(2, "0")}`
   }
+
+  useEffect(() => {
+    if (showComplete) {
+      setFunFact(getFunFact(totalVolume))
+    }
+  }, [showComplete, totalVolume])
 
   return (
     <div className="min-h-screen bg-background pb-32" dir="rtl">
@@ -603,40 +613,84 @@ function ActiveWorkout({
         {showComplete && (
           <motion.div
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 hevy-overlay flex items-center justify-center p-6"
+            className="fixed inset-0 z-50 hevy-overlay flex items-center justify-center p-6 overflow-y-auto"
           >
             <motion.div
               initial={{ scale: 0.85, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.85, opacity: 0 }}
               transition={{ type: "spring", damping: 20, stiffness: 300 }}
-              className="glass-card p-6 w-full max-w-sm text-center"
+              className="glass-card p-6 w-full max-w-sm text-center my-auto"
             >
               <motion.div
                 initial={{ scale: 0 }} animate={{ scale: 1 }}
                 transition={{ type: "spring", delay: 0.2, damping: 12 }}
-                className="w-20 h-20 rounded-full bg-gradient-to-br from-success/30 to-success/10 flex items-center justify-center mx-auto mb-5"
+                className="w-20 h-20 rounded-full bg-gradient-to-br from-success/30 to-success/10 flex items-center justify-center mx-auto mb-4"
               >
                 <Trophy className="w-10 h-10 text-success" />
               </motion.div>
               <h2 className="text-xl font-bold text-foreground mb-1">آفرین! 🎉</h2>
-              <p className="text-foreground/40 text-sm mb-5">تمرین با موفقیت ثبت شد</p>
-              <div className="grid grid-cols-3 gap-3 mb-6">
+              <p className="text-foreground/40 text-sm mb-4">تمرین با موفقیت ثبت شد</p>
+
+              {/* Fun Fact Card */}
+              <div className="bg-primary/5 border border-primary/10 rounded-2xl p-4 mb-4 flex items-start gap-3 text-right">
+                <Sparkles className="w-5 h-5 text-warning shrink-0 mt-0.5" />
+                <p className="text-xs font-medium text-foreground/80 leading-relaxed italic">
+                  {`"${funFact}"`}
+                </p>
+              </div>
+
+              <div className="grid grid-cols-3 gap-2.5 mb-6">
                 {[
                   { value: formatElapsed(elapsed), label: "مدت", color: "text-primary" },
                   { value: totalSets.toString(), label: "ست", color: "text-warning" },
                   { value: totalVolume.toLocaleString(), label: "حجم (kg)", color: "text-success" },
                 ].map((stat) => (
                   <div key={stat.label} className="bg-white/[0.03] rounded-2xl p-3 border border-white/5">
-                    <p className={`font-bold text-lg ${stat.color}`}>{stat.value}</p>
-                    <p className="text-foreground/30 text-[10px] mt-0.5">{stat.label}</p>
+                    <p className={`font-bold text-base ${stat.color}`}>{stat.value}</p>
+                    <p className="text-foreground/30 text-[9px] mt-0.5">{stat.label}</p>
                   </div>
                 ))}
               </div>
-              <button
-                onClick={() => { setShowComplete(false); router.push("/home") }}
-                className="w-full hevy-btn-primary py-3.5 text-sm"
-              >بازگشت به خانه</button>
+
+              <div className="flex flex-col gap-2">
+                <button
+                  onClick={() => setShowSharing(true)}
+                  className="w-full bg-white/5 hover:bg-white/10 text-foreground py-3.5 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all border border-white/5"
+                >
+                  <Share2 className="w-4 h-4" /> اشتراک‌گذاری موفقیت
+                </button>
+                <button
+                  onClick={() => { setShowComplete(false); router.push("/home") }}
+                  className="w-full hevy-btn-primary py-3.5 text-sm"
+                >بازگشت به خانه</button>
+              </div>
             </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Shareable Card Overlay */}
+      <AnimatePresence>
+        {showSharing && (
+          <motion.div
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[60] bg-black/95 flex flex-col items-center justify-center p-6"
+          >
+            <button onClick={() => setShowSharing(false)} className="absolute top-6 right-6 p-2 rounded-full bg-white/10 text-white">
+              <X className="w-6 h-6" />
+            </button>
+            <div className="w-full max-w-sm">
+              <ShareableCard
+                type="workout"
+                title={sessionName}
+                funFact={funFact}
+                stats={[
+                  { label: "حجم (kg)", value: totalVolume.toLocaleString() },
+                  { label: "مدت", value: formatElapsed(elapsed) },
+                  { label: "تعداد ست", value: totalSets.toString() }
+                ]}
+              />
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
@@ -718,7 +772,9 @@ export default function WorkoutPage() {
   const handleComplete = async () => {
     if (!sessionId) return
     const result = await completeWorkout({ sessionId, name: sessionName })
-    if (result.success) { setSessionId(null); setExercises([]); setElapsed(0) }
+    if (result.success) {
+      // Keep state until user dismisses the completion modal via router.push in ActiveWorkout
+    }
   }
 
   const handleDiscard = async () => {

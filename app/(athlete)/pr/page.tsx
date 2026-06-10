@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import { motion, AnimatePresence } from "motion/react"
 import { getPersonalRecords } from "@/app/actions/analytics"
 import { ShareableCard } from "@/components/ui/shareable-card"
+import { getFunFact } from "@/lib/gamification/engine"
 import {
   Trophy,
   TrendingUp,
@@ -226,6 +227,7 @@ export default function PersonalRecordsPage() {
               <ShareableCard
                 type="pr"
                 title={sharingPR.exercise_name}
+                funFact={getFunFact(sharingPR.max_volume)}
                 stats={[
                   { label: 'رکورد جدید', value: `${sharingPR.max_weight} kg` },
                   { label: 'تکرار', value: sharingPR.max_reps.toString() },

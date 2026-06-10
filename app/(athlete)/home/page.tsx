@@ -32,7 +32,8 @@ import { getPersonalRecords } from "@/app/actions/analytics"
 import { getActiveWorkout } from "@/app/actions/workouts"
 import { getRoutines } from "@/app/actions/routines"
 import GymSuggestionSheet from "@/components/gym-suggestion/gym-suggestion-sheet"
-import { Loader2, Navigation } from "lucide-react"
+import { Loader2, Navigation, ChevronRight } from "lucide-react"
+import { getAthleteLevel } from "@/lib/gamification/engine"
 
 // ── Animation variants ──
 const containerVariants = {
@@ -177,7 +178,7 @@ export default function HomePage() {
           await Promise.all([
             getUpcomingBookings(),
             getPopularGyms(),
-            getWorkoutStats({ period: "week" }),
+            getWorkoutStats({ period: "all" }),
             getPersonalRecords(),
             getActiveWorkout(),
             getRoutines(),
@@ -297,6 +298,8 @@ export default function HomePage() {
 
   const handleFindGym = () => setShowGymSheet(true)
 
+  const athleteLevel = getAthleteLevel(totalVolume)
+
   if (loading) return <HomeSkeleton />
   if (error) {
     return (
@@ -320,7 +323,13 @@ export default function HomePage() {
           <h1 className="text-2xl font-bold text-foreground">
             {getGreeting()} 👋
           </h1>
-          <p className="text-sm text-foreground/40 mt-1">{getMotivation()}</p>
+          <div className="flex items-center gap-2 mt-1">
+             <div className="px-2 py-0.5 rounded-full bg-primary/10 border border-primary/20 flex items-center gap-1">
+               <Trophy className="w-3 h-3 text-primary" />
+               <span className="text-[10px] font-bold text-primary">{athleteLevel.title}</span>
+             </div>
+             <p className="text-xs text-foreground/40">{getMotivation()}</p>
+          </div>
 
           {/* Athlete Coins Preview */}
           <Link href="/wallet" className="inline-flex items-center gap-1.5 mt-3 px-2.5 py-1 rounded-full bg-warning/10 border border-warning/20">
@@ -336,6 +345,28 @@ export default function HomePage() {
         <div className="flex flex-col items-center gap-0.5">
           <StreakRing days={streak} />
           <span className="text-[9px] text-primary font-semibold">استریک</span>
+        </div>
+      </motion.div>
+
+      {/* ── Level Progress Card ── */}
+      <motion.div variants={itemVariants}>
+        <div className="glass-card p-4">
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-xs font-semibold text-foreground/60">سطح پهلوانی</span>
+            <span className="text-[10px] text-foreground/30">
+              {athleteLevel.remainingToNext && athleteLevel.remainingToNext > 0
+                ? `${athleteLevel.remainingToNext.toLocaleString('fa-IR')} kg تا ${athleteLevel.nextLevel}`
+                : 'بالاترین سطح! 👑'}
+            </span>
+          </div>
+          <div className="h-2 w-full bg-white/5 rounded-full overflow-hidden">
+            <motion.div
+              className="h-full bg-gradient-to-r from-primary to-chart-purple"
+              initial={{ width: 0 }}
+              animate={{ width: `${Math.min((totalVolume / (totalVolume + (athleteLevel.remainingToNext || 0))) * 100, 100)}%` }}
+              transition={{ duration: 1, ease: "easeOut" }}
+            />
+          </div>
         </div>
       </motion.div>
 
@@ -606,24 +637,5 @@ export default function HomePage() {
         />
       )}
     </motion.div>
-  )
-}
-
-function ChevronRight(props: any) {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="m9 18 6-6-6-6" />
-    </svg>
   )
 }
