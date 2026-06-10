@@ -23,6 +23,8 @@ interface OnboardingData {
   fitness_level: string
   sport_preferences: string[]
   home_gym_id: string | null
+  weight?: number
+  height?: number
 }
 
 interface OnboardingResult {
@@ -669,6 +671,8 @@ export async function completeOnboarding(data: OnboardingData): Promise<Onboardi
       sport_preferences: data.sport_preferences,
       date_of_birth: data.date_of_birth,
       gender: data.gender,
+      weight_kg: data.weight,
+      height_cm: data.height,
     }
 
     let athleteError: string | null = null
@@ -681,6 +685,8 @@ export async function completeOnboarding(data: OnboardingData): Promise<Onboardi
           sport_preferences: data.sport_preferences,
           date_of_birth: data.date_of_birth,
           gender: data.gender,
+          weight_kg: data.weight,
+          height_cm: data.height,
         })
         .eq("id", profileId)
       athleteError = error?.message ?? null

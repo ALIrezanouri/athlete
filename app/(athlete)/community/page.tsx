@@ -2,9 +2,11 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
-import { motion } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
 import { getFeed, likeWorkout, unlikeWorkout, addComment, getComments } from '@/app/actions/social';
 import { useInfiniteScroll } from '@/lib/hooks/useInfiniteScroll';
+import { ShareableCard } from '@/components/ui/shareable-card';
+import { Share2, X, MessageCircle, Heart } from 'lucide-react';
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -67,6 +69,7 @@ export default function CommunityPage() {
   const [expandedComments, setExpandedComments] = useState<Record<string, boolean>>({});
   const [commentText, setCommentText] = useState<Record<string, string>>({});
   const [commentsData, setCommentsData] = useState<Record<string, any[]>>({});
+  const [sharingWorkout, setSharingWorkout] = useState<FeedItem | null>(null);
 
   const FEED_PAGE_SIZE = 15;
 
@@ -179,15 +182,23 @@ export default function CommunityPage() {
                 className="glass-card overflow-hidden"
               >
                 {/* User header — clickable to public profile */}
-                <Link href={`/profile/${workout.user_id}`} className="flex items-center gap-3 px-4 py-3 hover:bg-white/[0.02] transition-colors">
-                  <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary text-sm font-bold shrink-0">
-                    {workout.profiles?.full_name?.charAt(0) || '?'}
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium">{workout.profiles?.full_name || 'کاربر'}</p>
-                    <p className="text-xs text-foreground/40">{formatTimeAgo(workout.shared_at || workout.start_time)}</p>
-                  </div>
-                </Link>
+                <div className="flex items-center justify-between px-4 py-3">
+                  <Link href={`/profile/${workout.user_id}`} className="flex items-center gap-3 hover:opacity-80 transition-opacity">
+                    <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary text-sm font-bold shrink-0">
+                      {workout.profiles?.full_name?.charAt(0) || '?'}
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium">{workout.profiles?.full_name || 'کاربر'}</p>
+                      <p className="text-xs text-foreground/40">{formatTimeAgo(workout.shared_at || workout.start_time)}</p>
+                    </div>
+                  </Link>
+                  <button
+                    onClick={() => setSharingWorkout(workout)}
+                    className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-foreground/40 hover:text-primary transition-colors"
+                  >
+                    <Share2 className="w-4 h-4" />
+                  </button>
+                </div>
 
                 {/* Workout info */}
                 <div className="px-4 pb-3">
@@ -227,13 +238,13 @@ export default function CommunityPage() {
                       color: workout.user_liked ? '#FF6B6B' : 'rgba(255,255,255,0.4)'
                     }}
                   >
-                    {workout.user_liked ? '❤️' : '🤍'} {workout.like_count}
+                    <Heart className={`w-3.5 h-3.5 ${workout.user_liked ? 'fill-current' : ''}`} /> {workout.like_count}
                   </button>
                   <button
                     onClick={() => toggleComments(workout.id)}
                     className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs bg-white/5 text-foreground/40 transition-colors hover:bg-white/10"
                   >
-                    💬 {workout.comment_count}
+                    <MessageCircle className="w-3.5 h-3.5" /> {workout.comment_count}
                   </button>
                 </div>
 
@@ -281,6 +292,42 @@ export default function CommunityPage() {
           </div>
         )}
       </div>
+
+      {/* Sharing Overlay */}
+      <AnimatePresence>
+        {sharingWorkout && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 bg-black/90 flex flex-col items-center justify-center p-6"
+          >
+            <button
+              onClick={() => setSharingWorkout(null)}
+              className="absolute top-6 right-6 p-2 rounded-full bg-white/10 text-white"
+            >
+              <X className="w-6 h-6" />
+            </button>
+
+            <div className="w-full max-w-sm mb-8">
+              <ShareableCard
+                type="workout"
+                title={sharingWorkout.name}
+                stats={[
+                  { label: 'حجم کل', value: `${formatNumber(sharingWorkout.total_volume)} kg` },
+                  { label: 'مدت زمان', value: formatDuration(sharingWorkout.duration_seconds) },
+                  { label: 'ست‌ها', value: sharingWorkout.total_sets.toString() }
+                ]}
+                userName={sharingWorkout.profiles?.full_name || 'کاربر'}
+              />
+            </div>
+
+            <p className="text-white/60 text-sm text-center max-w-xs">
+              تصویر تمرین آماده شد! می‌توانید آن را در اینستاگرام یا شبکه‌های دیگر به اشتراک بگذارید.
+            </p>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

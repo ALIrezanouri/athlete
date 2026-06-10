@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { motion, AnimatePresence } from "motion/react"
 import { getPersonalRecords } from "@/app/actions/analytics"
+import { ShareableCard } from "@/components/ui/shareable-card"
 import {
   Trophy,
   TrendingUp,
@@ -13,6 +14,8 @@ import {
   Star,
   ChevronDown,
   Calendar,
+  Share2,
+  X,
 } from "lucide-react"
 
 interface PRRecord {
@@ -25,24 +28,13 @@ interface PRRecord {
   recent_improvement?: number
 }
 
-const muscleGroupColors: Record<string, string> = {
-  chest: "#FF453A",
-  back: "#30D158",
-  shoulders: "#FF9F0A",
-  biceps: "#4F8EF7",
-  triceps: "#BF5AF2",
-  quads: "#FF375F",
-  hamstrings: "#64D2FF",
-  glutes: "#FFD60A",
-  abs: "#30D158",
-}
-
 export default function PersonalRecordsPage() {
   const router = useRouter()
   const [records, setRecords] = useState<PRRecord[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedMuscle, setSelectedMuscle] = useState<string | null>(null)
   const [expandedId, setExpandedId] = useState<string | null>(null)
+  const [sharingPR, setSharingPR] = useState<PRRecord | null>(null)
 
   useEffect(() => {
     loadPRs()
@@ -119,7 +111,12 @@ export default function PersonalRecordsPage() {
                   {heaviestLift.max_weight} <span className="text-xs text-foreground/30">kg</span>
                 </p>
               </div>
-              <Star className="w-8 h-8 text-warning/20" />
+              <button
+                onClick={() => setSharingPR(heaviestLift)}
+                className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-foreground/40 hover:text-primary transition-colors"
+              >
+                <Share2 className="w-5 h-5" />
+              </button>
             </div>
           </motion.div>
         )}
@@ -148,38 +145,33 @@ export default function PersonalRecordsPage() {
               transition={{ delay: index * 0.03 }}
               className="glass-card overflow-hidden"
             >
-              <button
-                onClick={() => setExpandedId(expandedId === record.exercise_id ? null : record.exercise_id)}
-                className="w-full p-4 flex items-center gap-3"
-              >
-                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-                  <Dumbbell className="w-5 h-5 text-primary" />
-                </div>
-                <div className="flex-1 text-right">
-                  <p className="text-foreground font-semibold text-sm">{record.exercise_name}</p>
-                  <div className="flex items-center gap-3 mt-1">
-                    <span className="text-warning text-xs font-bold">
-                      {record.max_weight} kg × {record.max_reps}
-                    </span>
-                    <span className="text-foreground/20 text-[10px]">
-                      حجم: {record.max_volume.toLocaleString()} kg
-                    </span>
+              <div className="flex items-center">
+                <button
+                  onClick={() => setExpandedId(expandedId === record.exercise_id ? null : record.exercise_id)}
+                  className="flex-1 p-4 flex items-center gap-3"
+                >
+                  <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                    <Dumbbell className="w-5 h-5 text-primary" />
                   </div>
-                </div>
-                <div className="text-left">
-                  {record.recent_improvement && record.recent_improvement > 0 ? (
-                    <div className="flex items-center gap-0.5 text-success">
-                      <ArrowUpRight className="w-3.5 h-3.5" />
-                      <span className="text-xs font-bold">+{record.recent_improvement}%</span>
+                  <div className="flex-1 text-right">
+                    <p className="text-foreground font-semibold text-sm">{record.exercise_name}</p>
+                    <div className="flex items-center gap-3 mt-1">
+                      <span className="text-warning text-xs font-bold">
+                        {record.max_weight} kg × {record.max_reps}
+                      </span>
                     </div>
-                  ) : (
-                    <TrendingUp className="w-4 h-4 text-foreground/15" />
-                  )}
-                </div>
-                <motion.div animate={{ rotate: expandedId === record.exercise_id ? 180 : 0 }}>
-                  <ChevronDown className="w-4 h-4 text-foreground/20" />
-                </motion.div>
-              </button>
+                  </div>
+                  <motion.div animate={{ rotate: expandedId === record.exercise_id ? 180 : 0 }}>
+                    <ChevronDown className="w-4 h-4 text-foreground/20" />
+                  </motion.div>
+                </button>
+                <button
+                  onClick={() => setSharingPR(record)}
+                  className="p-4 text-foreground/20 hover:text-primary transition-colors"
+                >
+                  <Share2 className="w-4 h-4" />
+                </button>
+              </div>
 
               <AnimatePresence>
                 {expandedId === record.exercise_id && (
@@ -194,23 +186,17 @@ export default function PersonalRecordsPage() {
                       <div className="grid grid-cols-3 gap-2">
                         <div className="bg-white/[0.03] rounded-xl p-2.5 text-center">
                           <p className="text-warning font-bold text-sm">{record.max_weight}</p>
-                          <p className="text-foreground/25 text-[10px]">بیشترین وزن</p>
+                          <p className="text-foreground/25 text-[10px]">وزن</p>
                         </div>
                         <div className="bg-white/[0.03] rounded-xl p-2.5 text-center">
                           <p className="text-primary font-bold text-sm">{record.max_reps}</p>
-                          <p className="text-foreground/25 text-[10px]">بیشترین تکرار</p>
+                          <p className="text-foreground/25 text-[10px]">تکرار</p>
                         </div>
                         <div className="bg-white/[0.03] rounded-xl p-2.5 text-center">
                           <p className="text-success font-bold text-sm">{record.max_volume.toLocaleString()}</p>
-                          <p className="text-foreground/25 text-[10px]">بیشترین حجم</p>
+                          <p className="text-foreground/25 text-[10px]">حجم</p>
                         </div>
                       </div>
-                      {record.best_set_date && (
-                        <p className="text-foreground/20 text-[10px] mt-2 text-center">
-                          <Calendar className="w-3 h-3 inline ml-1" />
-                          {new Date(record.best_set_date).toLocaleDateString("fa-IR")}
-                        </p>
-                      )}
                     </div>
                   </motion.div>
                 )}
@@ -219,6 +205,41 @@ export default function PersonalRecordsPage() {
           ))
         )}
       </div>
+
+      {/* Sharing Overlay */}
+      <AnimatePresence>
+        {sharingPR && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 bg-black/90 flex flex-col items-center justify-center p-6"
+          >
+            <button
+              onClick={() => setSharingPR(null)}
+              className="absolute top-6 right-6 p-2 rounded-full bg-white/10 text-white"
+            >
+              <X className="w-6 h-6" />
+            </button>
+
+            <div className="w-full max-w-sm mb-8">
+              <ShareableCard
+                type="pr"
+                title={sharingPR.exercise_name}
+                stats={[
+                  { label: 'رکورد جدید', value: `${sharingPR.max_weight} kg` },
+                  { label: 'تکرار', value: sharingPR.max_reps.toString() },
+                  { label: 'حجم کل', value: `${sharingPR.max_volume.toLocaleString()} kg` }
+                ]}
+              />
+            </div>
+
+            <p className="text-white/60 text-sm text-center max-w-xs">
+              رکورد شما آماده اشتراک‌گذاری است!
+            </p>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }

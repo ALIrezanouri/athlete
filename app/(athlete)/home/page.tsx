@@ -20,6 +20,8 @@ import {
   PersonStanding,
   Award,
   BarChart3,
+  Wallet,
+  UserPlus,
 } from "lucide-react"
 import Link from "next/link"
 import { useEffect, useState, useTransition, memo, useCallback } from "react"
@@ -143,7 +145,7 @@ function HomeSkeleton() {
 
 // ── Main Page ──
 export default function HomePage() {
-  const { t, formatPrice } = useGlobalEngine()
+  const { t, formatPrice, locale } = useGlobalEngine()
   const [upcomingBooking, setUpcomingBooking] = useState<any>(null)
   const [popularGyms, setPopularGyms] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
@@ -154,6 +156,7 @@ export default function HomePage() {
   const [totalWorkouts, setTotalWorkouts] = useState(0)
   const [prCount, setPrCount] = useState(0)
   const [totalVolume, setTotalVolume] = useState(0)
+  const [coins, setCoins] = useState(450) // Mock coins
   // Active (in-progress) workout for "Continue" card
   const [activeWorkout, setActiveWorkout] = useState<{ name: string; exerciseCount: number; elapsed: number } | null>(null)
   // Today's routine suggestion + gym suggestions
@@ -313,11 +316,22 @@ export default function HomePage() {
     >
       {/* ── Hero: Greeting + Streak ── */}
       <motion.div variants={itemVariants} className="flex items-center justify-between">
-        <div>
+        <div className="flex-1">
           <h1 className="text-2xl font-bold text-foreground">
             {getGreeting()} 👋
           </h1>
           <p className="text-sm text-foreground/40 mt-1">{getMotivation()}</p>
+
+          {/* Athlete Coins Preview */}
+          <Link href="/wallet" className="inline-flex items-center gap-1.5 mt-3 px-2.5 py-1 rounded-full bg-warning/10 border border-warning/20">
+            <div className="w-4 h-4 rounded-full bg-warning flex items-center justify-center">
+              <span className="text-[10px] font-black text-black">R</span>
+            </div>
+            <span className="text-xs font-bold text-warning">
+              {coins.toLocaleString(locale === 'fa' ? 'fa-IR' : 'en-US')} {locale === 'fa' ? 'کوین' : 'Coins'}
+            </span>
+            <ChevronRight className="w-3 h-3 text-warning/40" />
+          </Link>
         </div>
         <div className="flex flex-col items-center gap-0.5">
           <StreakRing days={streak} />
@@ -487,7 +501,7 @@ export default function HomePage() {
         </Link>
       </motion.div>
 
-      {/* ── Quick Actions — 8 Feature Hub ── */}
+      {/* ── Quick Actions — Feature Hub ── */}
       <motion.div variants={itemVariants}>
         <div className="flex items-center justify-between mb-2">
           <span className="text-sm font-bold text-foreground/60">دسترسی سریع</span>
@@ -497,9 +511,9 @@ export default function HomePage() {
             { icon: Search, label: "اکسپلور", href: "/explore", color: "bg-primary/15", iconColor: "text-primary" },
             { icon: CalendarDays, label: "رزروها", href: "/bookings", color: "bg-success/15", iconColor: "text-success" },
             { icon: BarChart3, label: "آمار", href: "/analytics", color: "bg-chart-purple/15", iconColor: "text-chart-purple" },
-            { icon: Zap, label: "ابزارها", href: "/tools", color: "bg-warning/15", iconColor: "text-warning" },
+            { icon: Wallet, label: "کیف پول", href: "/wallet", color: "bg-warning/15", iconColor: "text-warning" },
+            { icon: UserPlus, label: "دعوت", href: "/referral", color: "bg-info/15", iconColor: "text-info" },
             { icon: Award, label: "رکوردها", href: "/pr", color: "bg-warning/15", iconColor: "text-warning" },
-            { icon: PersonStanding, label: "نقشه بدن", href: "/body-map", color: "bg-info/15", iconColor: "text-info" },
             { icon: Users, label: "فید", href: "/community", color: "bg-destructive/15", iconColor: "text-destructive" },
             { icon: Dumbbell, label: "حرکات", href: "/exercises", color: "bg-success/15", iconColor: "text-success" },
           ].map((action) => (
@@ -592,5 +606,24 @@ export default function HomePage() {
         />
       )}
     </motion.div>
+  )
+}
+
+function ChevronRight(props: any) {
+  return (
+    <svg
+      {...props}
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="m9 18 6-6-6-6" />
+    </svg>
   )
 }

@@ -466,6 +466,25 @@ export const fallbackTranslations: Record<Locale, Record<string, string>> = {
     "onboarding.step": "مرحله",
     "onboarding.of": "از",
     "onboarding.saving": "در حال ذخیره...",
+    "onboarding.weight": "وزن (کیلوگرم)",
+    "onboarding.height": "قد (سانتی‌متر)",
+    "onboarding.reward_preview": "با تکمیل مشخصات، ۵۰۰ امتیاز ورزشی هدیه بگیرید!",
+    "onboarding.saman_insurance": "تخفیف بیمه سامان در انتظار شماست",
+    "home.coins": "امتیاز ورزشی",
+    "home.insurance_discount": "تخفیف بیمه",
+    "referral.title": "دعوت از دوستان",
+    "referral.subtitle": "با دعوت از دوستانتان، هر دو امتیاز ورزشی بگیرید",
+    "referral.code": "کد معرف شما",
+    "referral.copy": "کپی لینک دعوت",
+    "referral.share": "اشتراک‌گذاری در واتس‌اپ",
+    "referral.stats": "آمار دعوت‌های شما",
+    "wallet.title": "کیف پول من",
+    "wallet.balance": "موجودی امتیاز",
+    "wallet.cash": "موجودی نقدی",
+    "wallet.transactions": "تاریخچه تراکنش‌ها",
+    "wallet.redeem": "تبدیل به تخفیف بیمه",
+    "community.achievement": "دستاورد جدید!",
+    "shareAchievement": "اشتراک‌گذاری موفقیت",
   },
 };
 
@@ -513,6 +532,8 @@ export const fallbackFeatureFlags: Record<string, boolean> = {
   social_feed: false,
   premium_coaching: false,
   booking_ticket: true,
+  referral: true,
+  gamification: true,
 };
 
 // ─── Fallback RTL Map ─────────────────────────────────────────────

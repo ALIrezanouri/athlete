@@ -8,7 +8,7 @@ import { MagicCard } from "@/components/ui/magic-card"
 import { ShinyButton } from "@/components/ui/shiny-button"
 import { GlassInput } from "@/components/auth/glass-input"
 import { completeOnboarding, getGymsForOnboarding } from "@/app/actions/auth"
-import { User, Activity, Dumbbell, ChevronLeft, ChevronRight, Star, MapPin } from "lucide-react"
+import { User, Activity, Dumbbell, ChevronLeft, ChevronRight, Star, MapPin, Scale, Ruler, ShieldCheck } from "lucide-react"
 
 // ── Types ────────────────────────────────────────────────────────────────────
 type OnboardingStep = 1 | 2 | 3
@@ -76,6 +76,8 @@ export default function OnboardingPage() {
   const [fullName, setFullName] = useState("")
   const [dateOfBirth, setDateOfBirth] = useState("")
   const [gender, setGender] = useState<string | null>(null)
+  const [weight, setWeight] = useState("")
+  const [height, setHeight] = useState("")
 
   // Step 2: Fitness Profile
   const [fitnessLevel, setFitnessLevel] = useState<string>("beginner")
@@ -95,7 +97,7 @@ export default function OnboardingPage() {
   }, [])
 
   // ── Step Validation ────────────────────────────────────────────────────
-  const canProceedFromStep1 = fullName.trim().length >= 2
+  const canProceedFromStep1 = fullName.trim().length >= 2 && weight && height
   const canProceedFromStep2 = fitnessLevel && sportPreferences.length > 0
 
   // ── Handle Next ────────────────────────────────────────────────────────
@@ -103,7 +105,7 @@ export default function OnboardingPage() {
     setError(null)
 
     if (step === 1 && !canProceedFromStep1) {
-      setError(t("onboarding.step1.namePlaceholder"))
+      setError(locale === "fa" ? "لطفاً تمام موارد را تکمیل کنید" : "Please complete all fields")
       return
     }
     if (step === 2 && !canProceedFromStep2) {
@@ -115,7 +117,7 @@ export default function OnboardingPage() {
       setDirection(1)
       setStep((step + 1) as OnboardingStep)
     }
-  }, [step, canProceedFromStep1, canProceedFromStep2, t])
+  }, [step, canProceedFromStep1, canProceedFromStep2, t, locale])
 
   // ── Handle Back ────────────────────────────────────────────────────────
   const handleBack = useCallback(() => {
@@ -138,6 +140,8 @@ export default function OnboardingPage() {
         fitness_level: fitnessLevel,
         sport_preferences: sportPreferences,
         home_gym_id: selectedGym,
+        weight: parseFloat(weight),
+        height: parseFloat(height)
       })
 
       if (result.success) {
@@ -146,7 +150,7 @@ export default function OnboardingPage() {
         setError(result.error ?? "Something went wrong")
       }
     })
-  }, [fullName, dateOfBirth, gender, fitnessLevel, sportPreferences, selectedGym, router])
+  }, [fullName, dateOfBirth, gender, fitnessLevel, sportPreferences, selectedGym, weight, height, router])
 
   // ── Handle Skip ────────────────────────────────────────────────────────
   const handleSkip = useCallback(() => {
@@ -250,7 +254,7 @@ export default function OnboardingPage() {
           </div>
 
           {/* ── Animated Steps ──────────────────────────────────────── */}
-          <div className="relative overflow-hidden" style={{ minHeight: "280px" }}>
+          <div className="relative overflow-hidden" style={{ minHeight: "340px" }}>
             <AnimatePresence mode="wait" custom={direction}>
               {/* ── Step 1: Personal Info ──────────────────────────────── */}
               {step === 1 && (
@@ -265,10 +269,6 @@ export default function OnboardingPage() {
                   className="flex flex-col gap-4"
                   suppressHydrationWarning
                 >
-                  <p className="text-sm text-foreground/50 text-center">
-                    {t("onboarding.step1.subtitle")}
-                  </p>
-
                   {/* Full Name */}
                   <div>
                     <label className="text-xs text-foreground/40 mb-1 block">
@@ -280,27 +280,37 @@ export default function OnboardingPage() {
                       placeholder={t("onboarding.step1.namePlaceholder")}
                       dir={dir}
                       autoFocus
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter" && canProceedFromStep1) handleNext()
-                      }}
                     />
                   </div>
 
-                  {/* Date of Birth */}
-                  <div>
-                    <label className="text-xs text-foreground/40 mb-1 block">
-                      {t("onboarding.step1.dob")}
-                    </label>
-                    <GlassInput
-                      value={dateOfBirth}
-                      onChange={(e) => setDateOfBirth(e.target.value)}
-                      placeholder="YYYY-MM-DD"
-                      dir="ltr"
-                      type="date"
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") handleNext()
-                      }}
-                    />
+                  {/* Weight & Height */}
+                  <div className="flex gap-3">
+                    <div className="flex-1">
+                      <label className="text-xs text-foreground/40 mb-1 block flex items-center gap-1">
+                        <Scale className="w-3 h-3" />
+                        {locale === "fa" ? "وزن (کیلوگرم)" : "Weight (kg)"}
+                      </label>
+                      <GlassInput
+                        value={weight}
+                        onChange={(e) => setWeight(e.target.value)}
+                        placeholder="70"
+                        type="number"
+                        dir="ltr"
+                      />
+                    </div>
+                    <div className="flex-1">
+                      <label className="text-xs text-foreground/40 mb-1 block flex items-center gap-1">
+                        <Ruler className="w-3 h-3" />
+                        {locale === "fa" ? "قد (سانتی‌متر)" : "Height (cm)"}
+                      </label>
+                      <GlassInput
+                        value={height}
+                        onChange={(e) => setHeight(e.target.value)}
+                        placeholder="180"
+                        type="number"
+                        dir="ltr"
+                      />
+                    </div>
                   </div>
 
                   {/* Gender */}
@@ -314,7 +324,7 @@ export default function OnboardingPage() {
                           key={g}
                           onClick={() => setGender(g)}
                           className={`
-                            flex-1 rounded-xl border py-2.5 text-sm transition-all duration-200
+                            flex-1 rounded-xl border py-2 text-sm transition-all duration-200
                             ${
                               gender === g
                                 ? "border-primary/50 bg-primary/10 text-foreground"
@@ -325,6 +335,21 @@ export default function OnboardingPage() {
                           {t(`onboarding.step1.${g}`)}
                         </button>
                       ))}
+                    </div>
+                  </div>
+
+                  {/* Saman Insurance Promo */}
+                  <div className="mt-2 rounded-xl border border-success/20 bg-success/5 p-3 flex items-start gap-3">
+                    <ShieldCheck className="w-5 h-5 text-success shrink-0 mt-0.5" />
+                    <div>
+                      <p className="text-xs font-bold text-success">
+                        {locale === "fa" ? "تخفیف بیمه سامان" : "Saman Insurance Discount"}
+                      </p>
+                      <p className="text-[10px] text-success/70 leading-relaxed">
+                        {locale === "fa"
+                          ? "با ثبت دقیق اطلاعات، تا ۵۰٪ تخفیف روی بیمه حوادث ورزشی دریافت کنید."
+                          : "By providing accurate data, get up to 50% discount on sports accident insurance."}
+                      </p>
                     </div>
                   </div>
                 </motion.div>
