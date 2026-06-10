@@ -3,6 +3,8 @@
 ## 1. Product Strategy
 Transform Rokhdad FIT into an addictive fitness experience using XP, Levels, Heroic Badges, and "Athlete Coins" redeemable for **Saman Insurance** (بیمه سامان) discounts.
 
+**UX Vision:** Leverage visual storytelling (weight comparisons) and "Heroic" aesthetics (Rostam/Hercules) to provide emotional rewards for physical effort. See `plans/ux-design-guide.md` for detailed UI/UX principles.
+
 ---
 
 ## 2. Technical Specifications (Atomic Tasks)
