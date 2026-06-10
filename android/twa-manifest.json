@@ -1,0 +1,39 @@
+{
+  "packageId": "com.rokhdad.athlete",
+  "host": "athlete-2.vercel.app",
+  "name": "Rokhdad FIT",
+  "shortName": "Rokhdad",
+  "display": "standalone",
+  "themeColor": "#0a0a0a",
+  "themeColorDark": "#0a0a0a",
+  "backgroundColor": "#0a0a0a",
+  "startUrl": "/home",
+  "iconUrl": "https://athlete-2.vercel.app/icons/icon-512x512.png",
+  "maskableIconUrl": "https://athlete-2.vercel.app/icons/icon-512x512.png",
+  "splashscreenFadeOutDuration": 300,
+  "signingKey": {
+    "path": "android.keystore",
+    "alias": "android"
+  },
+  "appVersionName": "1.0.0",
+  "appVersionCode": 1,
+  "shortcuts": [],
+  "generatorApp": "bubblewrap-cli",
+  "webManifestUrl": "https://athlete-2.vercel.app/manifest.webmanifest",
+  "fallbackType": "customtabs",
+  "features": {},
+  "alphaDependencies": {
+    "enabled": false
+  },
+  "enableNotifications": true,
+  "enableSiteSettingsShortcut": true,
+  "isChromeOSOnly": false,
+  "orientation": "portrait",
+  "fingerprints": [],
+  "additionalTrustedOrigins": [],
+  "retainedBundles": [],
+  "forceReloadAds": false,
+  "appOptions": {
+    "darkSplashScreenBackgroundColor": "#0a0a0a"
+  }
+}

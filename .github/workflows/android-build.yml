@@ -1,0 +1,61 @@
+name: Build Android App
+
+on:
+  push:
+    branches: [ android-app ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Bubblewrap
+        run: npm install -g @bubblewrap/cli
+
+      - name: Build with Bubblewrap
+        run: |
+          mkdir -p ~/.bubblewrap
+          echo "{\"jdkPath\":\"$JAVA_HOME\",\"androidSdkPath\":\"$ANDROID_HOME\"}" > ~/.bubblewrap/config.json
+
+          # Generate a temporary keystore for CI build
+          keytool -genkey -v -keystore android/android.keystore -alias android -keyalg RSA -keysize 2048 -validity 10000 -storepass password -keypass password -dname "CN=Rokhdad, OU=IT, O=Rokhdad, L=Tehran, S=Tehran, C=IR"
+
+          cd android
+          # Update twa-manifest to use this keystore and passwords
+          # Use a temporary file to update manifest
+          cat twa-manifest.json | jq '.signingKey.password="password" | .signingKey.keyPassword="password"' > twa-manifest.tmp.json && mv twa-manifest.tmp.json twa-manifest.json
+
+          # Initialize the project
+          yes | bubblewrap init --manifest https://athlete-2.vercel.app/manifest.webmanifest --directory ./ --metaData ./twa-manifest.json --yes
+
+          # Build the APK and AAB
+          yes | bubblewrap build
+        env:
+          JAVA_HOME: /usr/lib/jvm/temurin-17-jdk-amd64
+          ANDROID_HOME: /usr/local/lib/android/sdk
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-release-apk
+          path: android/*.apk
+
+      - name: Upload AAB
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-release-bundle
+          path: android/*.aab
