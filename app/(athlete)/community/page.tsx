@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { getFeed, likeWorkout, unlikeWorkout, addComment, getComments } from '@/app/actions/social';
 import { useInfiniteScroll } from '@/lib/hooks/useInfiniteScroll';
 import { ShareableCard } from '@/components/ui/shareable-card';
-import { Share2, X, MessageCircle, Heart, Sparkles } from 'lucide-react';
+import { Share2, X, MessageCircle, Heart, Sparkles, Clock, Dumbbell } from 'lucide-react';
 import { getVolumeComparison } from '@/lib/gamification/engine';
 
 const containerVariants = {
@@ -150,31 +150,31 @@ export default function CommunityPage() {
   }
 
   return (
-    <div className="min-h-screen gradient-mesh text-foreground pb-24" dir="rtl">
+    <div className="min-h-screen gradient-mesh text-foreground pb-32" dir="rtl">
       {/* Header */}
-      <div className="sticky top-0 z-30 glass-card rounded-none border-b border-white/5 px-4 py-3">
-        <h1 className="text-lg font-bold">🏠 انجمن</h1>
-        <p className="text-xs text-foreground/40 mt-0.5">تمرینات دوستان و جامعه</p>
+      <div className="sticky top-0 z-30 bg-black/60 backdrop-blur-2xl border-b border-white/5 px-4 py-4">
+        <h1 className="text-xl font-black tracking-tight">انجمن</h1>
+        <p className="text-[10px] font-bold text-foreground/40 uppercase tracking-widest mt-0.5">تمرینات دوستان و جامعه</p>
       </div>
 
       {/* Feed */}
-      <div className="max-w-lg mx-auto px-4 py-4 space-y-4">
+      <div className="max-w-lg mx-auto px-4 py-4 space-y-5">
         {loading ? (
-          <div className="space-y-4">
-            {[1, 2, 3].map(i => <div key={i} className="skeleton h-64 rounded-2xl" />)}
+          <div className="space-y-5">
+            {[1, 2, 3].map(i => <div key={i} className="skeleton h-64 rounded-3xl" />)}
           </div>
         ) : feed.length === 0 ? (
-          <div className="text-center py-20">
-            <div className="text-4xl mb-3">🏋️</div>
-            <p className="text-foreground/40 text-sm">هنوز تمرینی به اشتراک گذاشته نشده</p>
-            <p className="text-foreground/25 text-xs mt-1">بعد از تکمیل تمرین، آن را به اشتراک بگذارید!</p>
+          <div className="text-center py-24 glass-card border-dashed">
+            <div className="text-4xl mb-4">🏋️</div>
+            <p className="text-foreground/40 text-sm font-bold">هنوز تمرینی به اشتراک گذاشته نشده</p>
+            <p className="text-foreground/20 text-xs mt-1 italic">بعد از تکمیل تمرین، آن را به اشتراک بگذارید!</p>
           </div>
         ) : (
           <motion.div
             variants={containerVariants}
             initial="hidden"
             animate="show"
-            className="space-y-4"
+            className="space-y-5"
           >
             {feed.map(workout => {
               const comp = getVolumeComparison(workout.total_volume);
@@ -187,51 +187,50 @@ export default function CommunityPage() {
                   className="glass-card overflow-hidden"
                 >
                   {/* User header */}
-                  <div className="flex items-center justify-between px-4 py-3">
-                    <Link href={`/profile/${workout.user_id}`} className="flex items-center gap-3 hover:opacity-80 transition-opacity">
-                      <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary text-sm font-bold shrink-0">
+                  <div className="flex items-center justify-between px-4 py-4">
+                    <Link href={`/profile/${workout.user_id}`} className="flex items-center gap-3 haptic-ready">
+                      <div className="w-11 h-11 rounded-2xl bg-primary/20 flex items-center justify-center text-primary text-base font-black shrink-0 border border-primary/10">
                         {workout.profiles?.full_name?.charAt(0) || '?'}
                       </div>
                       <div>
-                        <p className="text-sm font-medium">{workout.profiles?.full_name || 'کاربر'}</p>
-                        <p className="text-xs text-foreground/40">{formatTimeAgo(workout.shared_at || workout.start_time)}</p>
+                        <p className="text-sm font-bold text-foreground">{workout.profiles?.full_name || 'کاربر'}</p>
+                        <p className="text-[10px] font-bold text-foreground/30 uppercase">{formatTimeAgo(workout.shared_at || workout.start_time)}</p>
                       </div>
                     </Link>
                     <button
                       onClick={() => setSharingWorkout(workout)}
-                      className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-foreground/40 hover:text-primary transition-colors"
+                      className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center text-foreground/40 hover:text-primary transition-colors haptic-ready"
                     >
-                      <Share2 className="w-4 h-4" />
+                      <Share2 className="w-4.5 h-4.5" />
                     </button>
                   </div>
 
                   {/* Gamification Badge (Achievement) */}
                   {isHeavy && (
-                    <div className="mx-4 mb-3 px-3 py-2 rounded-xl bg-warning/10 border border-warning/20 flex items-center gap-2">
-                      <Sparkles className="w-4 h-4 text-warning" />
-                      <span className="text-[10px] font-bold text-warning uppercase tracking-wider">
+                    <div className="mx-4 mb-4 px-3 py-2.5 rounded-2xl bg-warning/10 border border-warning/20 flex items-center gap-3">
+                      <Sparkles className="w-5 h-5 text-warning shrink-0" />
+                      <span className="text-[10px] font-black text-warning uppercase tracking-wider leading-none">
                         دستاورد حجیم: معادل {comp.count.toLocaleString('fa-IR')} {comp.object} {comp.emoji}
                       </span>
                     </div>
                   )}
 
                   {/* Workout info */}
-                  <div className="px-4 pb-3">
-                    <h3 className="font-bold text-base mb-2">{workout.name}</h3>
-                    <div className="flex gap-4 text-xs text-foreground/50 mb-3">
-                      <span>⏱ {formatDuration(workout.duration_seconds)}</span>
-                      <span className={isHeavy ? "text-warning font-bold" : ""}>🏋️ {formatNumber(workout.total_volume)} kg حجم</span>
-                      <span>🔢 {workout.total_sets} ست</span>
+                  <div className="px-4 pb-4">
+                    <h3 className="font-black text-lg mb-3 leading-tight text-foreground">{workout.name}</h3>
+                    <div className="flex gap-5 text-[11px] font-bold text-foreground/40 uppercase mb-4">
+                      <span className="flex items-center gap-1.5"><Clock className="w-3 h-3" /> {formatDuration(workout.duration_seconds)}</span>
+                      <span className={`flex items-center gap-1.5 ${isHeavy ? "text-warning" : ""}`}><Dumbbell className="w-3 h-3" /> {formatNumber(workout.total_volume)} kg</span>
+                      <span className="flex items-center gap-1.5"><Sparkles className="w-3 h-3" /> {workout.total_sets} ست</span>
                     </div>
 
                     {/* Exercises summary */}
-                    <div className="space-y-1.5">
+                    <div className="space-y-2">
                       {workout.workout_exercises?.slice(0, 5).map(ex => (
-                        <div key={ex.id} className="flex items-center justify-between text-xs bg-white/[0.03] rounded-lg px-3 py-2">
-                          <span className="text-foreground/70">{ex.exercise_name}</span>
-                          <span className="text-foreground/35">
-                            {ex.workout_sets?.length} ست • بیشترین{' '}
-                            {Math.max(...(ex.workout_sets?.map(s => s.weight_kg) || [0]))} kg
+                        <div key={ex.id} className="flex items-center justify-between text-xs bg-white/[0.03] border border-white/[0.05] rounded-xl px-3.5 py-2.5">
+                          <span className="text-foreground/80 font-medium">{ex.exercise_name}</span>
+                          <span className="text-foreground/30 font-bold text-[10px]">
+                            {ex.workout_sets?.length} ست • {Math.max(...(ex.workout_sets?.map(s => s.weight_kg) || [0]))} kg
                           </span>
                         </div>
                       ))}
@@ -239,32 +238,32 @@ export default function CommunityPage() {
                   </div>
 
                   {/* Actions */}
-                  <div className="flex items-center gap-1 px-4 py-2.5 border-t border-white/5">
+                  <div className="flex items-center gap-2 px-4 py-3 border-t border-white/5 bg-white/[0.01]">
                     <button
                       onClick={() => toggleLike(workout.id, !!workout.user_liked)}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs transition-all"
+                      className="flex items-center gap-2 px-4 py-2 rounded-full text-xs font-black transition-all haptic-ready"
                       style={{
-                        background: workout.user_liked ? 'rgba(255,107,107,0.15)' : 'rgba(255,255,255,0.05)',
-                        color: workout.user_liked ? '#FF6B6B' : 'rgba(255,255,255,0.4)'
+                        background: workout.user_liked ? 'rgba(255,69,58,0.15)' : 'rgba(255,255,255,0.04)',
+                        color: workout.user_liked ? '#FF453A' : 'rgba(255,255,255,0.4)'
                       }}
                     >
-                      <Heart className={`w-3.5 h-3.5 ${workout.user_liked ? 'fill-current' : ''}`} /> {workout.like_count}
+                      <Heart className={`w-4 h-4 ${workout.user_liked ? 'fill-current' : ''}`} /> {workout.like_count.toLocaleString('fa-IR')}
                     </button>
                     <button
                       onClick={() => toggleComments(workout.id)}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs bg-white/5 text-foreground/40 transition-colors hover:bg-white/10"
+                      className="flex items-center gap-2 px-4 py-2 rounded-full text-xs font-black bg-white/[0.04] text-foreground/40 haptic-ready"
                     >
-                      <MessageCircle className="w-3.5 h-3.5" /> {workout.comment_count}
+                      <MessageCircle className="w-4 h-4" /> {workout.comment_count.toLocaleString('fa-IR')}
                     </button>
                   </div>
 
                   {/* Comments section */}
                   {expandedComments[workout.id] && (
-                    <div className="border-t border-white/5 px-4 py-3 space-y-2">
+                    <div className="border-t border-white/5 px-4 py-4 space-y-3 bg-black/20">
                       {commentsData[workout.id]?.map((c: any) => (
-                        <div key={c.id} className="text-xs">
-                          <span className="font-medium text-success">{c.profiles?.full_name}: </span>
-                          <span className="text-foreground/60">{c.comment}</span>
+                        <div key={c.id} className="text-xs leading-relaxed">
+                          <span className="font-black text-primary ml-1">{c.profiles?.full_name}: </span>
+                          <span className="text-foreground/70">{c.comment}</span>
                         </div>
                       ))}
                       <div className="flex gap-2 mt-2">
@@ -274,11 +273,11 @@ export default function CommunityPage() {
                           onChange={e => setCommentText(prev => ({ ...prev, [workout.id]: e.target.value }))}
                           onKeyDown={e => e.key === 'Enter' && submitComment(workout.id)}
                           placeholder="نظرتان را بنویسید..."
-                          className="flex-1 bg-white/[0.05] rounded-full px-3 py-1.5 text-xs text-foreground placeholder-white/25 outline-none focus:ring-1 focus:ring-primary"
+                          className="flex-1 bg-white/[0.05] rounded-xl px-4 py-2.5 text-xs text-foreground placeholder-white/20 outline-none focus:ring-1 focus:ring-primary border border-white/5"
                         />
                         <button
                           onClick={() => submitComment(workout.id)}
-                          className="text-primary text-xs font-medium px-2"
+                          className="bg-primary/10 text-primary text-xs font-black px-4 rounded-xl border border-primary/10 haptic-ready"
                         >
                           ارسال
                         </button>
@@ -293,12 +292,11 @@ export default function CommunityPage() {
 
         {/* Infinite scroll sentinel */}
         {!loading && feed.length > 0 && (
-          <div ref={sentinelRef} className="flex items-center justify-center py-6">
-            {loadingMore && (
+          <div ref={sentinelRef} className="flex items-center justify-center py-8">
+            {loadingMore ? (
               <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-            )}
-            {!hasMore && feed.length > 0 && (
-              <p className="text-xs text-foreground/25">پایان فید</p>
+            ) : (
+              !hasMore && <p className="text-[10px] font-black text-foreground/20 uppercase tracking-widest">پایان فید انجمن</p>
             )}
           </div>
         )}
@@ -311,16 +309,16 @@ export default function CommunityPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-black/90 flex flex-col items-center justify-center p-6"
+            className="fixed inset-0 z-50 bg-black/95 backdrop-blur-2xl flex flex-col items-center justify-center p-6"
           >
             <button
               onClick={() => setSharingWorkout(null)}
-              className="absolute top-6 right-6 p-2 rounded-full bg-white/10 text-white"
+              className="absolute top-6 right-6 w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-white"
             >
               <X className="w-6 h-6" />
             </button>
 
-            <div className="w-full max-w-sm mb-8">
+            <div className="w-full max-w-sm">
               <ShareableCard
                 type="workout"
                 title={sharingWorkout.name}

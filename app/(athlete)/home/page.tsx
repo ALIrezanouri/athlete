@@ -22,6 +22,8 @@ import {
   BarChart3,
   Wallet,
   UserPlus,
+  ChevronRight,
+  Navigation,
 } from "lucide-react"
 import Link from "next/link"
 import { useEffect, useState, useTransition, memo, useCallback } from "react"
@@ -32,8 +34,8 @@ import { getPersonalRecords } from "@/app/actions/analytics"
 import { getActiveWorkout } from "@/app/actions/workouts"
 import { getRoutines } from "@/app/actions/routines"
 import GymSuggestionSheet from "@/components/gym-suggestion/gym-suggestion-sheet"
-import { Loader2, Navigation, ChevronRight } from "lucide-react"
 import { getAthleteLevel } from "@/lib/gamification/engine"
+import { getAthleteCoins } from "@/app/actions/gamification"
 
 // ── Animation variants ──
 const containerVariants = {
@@ -75,7 +77,7 @@ const StreakRing = memo(function StreakRing({ days }: { days: number }) {
   return (
     <div className="relative w-16 h-16">
       <svg className="w-full h-full -rotate-90" viewBox="0 0 64 64">
-        <circle cx="32" cy="32" r={radius} fill="none" stroke="#3A3A3C" strokeWidth="4" />
+        <circle cx="32" cy="32" r={radius} fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="4" />
         <circle
           cx="32" cy="32" r={radius}
           fill="none" stroke={ringColor} strokeWidth="4"
@@ -106,7 +108,7 @@ const WeeklyBars = memo(function WeeklyBars({ activeDays }: { activeDays: boolea
         <div key={i} className="flex flex-col items-center gap-1.5 flex-1">
           <div
             className={`w-full rounded-md transition-all duration-500 ${
-              active ? "bg-primary h-10" : "bg-muted/40 h-2.5"
+              active ? "bg-primary h-10" : "bg-white/5 h-2.5"
             }`}
             style={{ transitionDelay: `${i * 80}ms` }}
           />
@@ -157,7 +159,7 @@ export default function HomePage() {
   const [totalWorkouts, setTotalWorkouts] = useState(0)
   const [prCount, setPrCount] = useState(0)
   const [totalVolume, setTotalVolume] = useState(0)
-  const [coins, setCoins] = useState(450) // Mock coins
+  const [coins, setCoins] = useState(0)
   // Active (in-progress) workout for "Continue" card
   const [activeWorkout, setActiveWorkout] = useState<{ name: string; exerciseCount: number; elapsed: number } | null>(null)
   // Today's routine suggestion + gym suggestions
@@ -174,7 +176,7 @@ export default function HomePage() {
         setError(null)
 
         // ── Phase 1: Fire all independent requests in parallel ──
-        const [upcomingResult, gymsResult, statsResult, prResult, activeResult, routinesResult] =
+        const [upcomingResult, gymsResult, statsResult, prResult, activeResult, routinesResult, coinsResult] =
           await Promise.all([
             getUpcomingBookings(),
             getPopularGyms(),
@@ -182,6 +184,7 @@ export default function HomePage() {
             getPersonalRecords(),
             getActiveWorkout(),
             getRoutines(),
+            getAthleteCoins(),
           ])
 
         // Process upcoming bookings
@@ -220,6 +223,11 @@ export default function HomePage() {
         // Process personal records
         if (prResult.success && prResult.records) {
           setPrCount(prResult.records.length)
+        }
+
+        // Process coins
+        if (coinsResult.success) {
+          setCoins(coinsResult.balance ?? 0)
         }
 
         // Process active workout
@@ -311,7 +319,7 @@ export default function HomePage() {
 
   return (
     <motion.div
-      className="px-4 pt-12 pb-28 space-y-5 gradient-mesh min-h-screen"
+      className="px-4 pt-12 pb-32 space-y-5 gradient-mesh min-h-screen"
       dir="rtl"
       variants={containerVariants}
       initial="hidden"
@@ -359,12 +367,12 @@ export default function HomePage() {
                 : 'بالاترین سطح! 👑'}
             </span>
           </div>
-          <div className="h-2 w-full bg-white/5 rounded-full overflow-hidden">
+          <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
             <motion.div
               className="h-full bg-gradient-to-r from-primary to-chart-purple"
               initial={{ width: 0 }}
               animate={{ width: `${Math.min((totalVolume / (totalVolume + (athleteLevel.remainingToNext || 0))) * 100, 100)}%` }}
-              transition={{ duration: 1, ease: "easeOut" }}
+              transition={{ duration: 1.5, ease: "easeOut" }}
             />
           </div>
         </div>
@@ -479,25 +487,25 @@ export default function HomePage() {
       {/* ── Quick Stats — Bento Grid ── */}
       <motion.div variants={itemVariants}>
         <div className="grid grid-cols-3 gap-3">
-          <Link href="/workout" className="bento-cell p-3 flex flex-col items-center justify-center text-center">
+          <Link href="/workout" className="glass-card p-3 flex flex-col items-center justify-center text-center haptic-ready">
             <div className="w-9 h-9 rounded-xl bg-primary/15 flex items-center justify-center mb-2">
-              <Dumbbell className="w-4.5 h-4.5 text-primary" />
+              <Dumbbell className="w-5 h-5 text-primary" />
             </div>
             <span className="text-lg font-bold text-foreground">{totalWorkouts.toLocaleString("fa-IR")}</span>
             <span className="text-[9px] text-foreground/40 mt-0.5">تمرین</span>
           </Link>
 
-          <Link href="/analytics" className="bento-cell p-3 flex flex-col items-center justify-center text-center">
+          <Link href="/analytics" className="glass-card p-3 flex flex-col items-center justify-center text-center haptic-ready">
             <div className="w-9 h-9 rounded-xl bg-success/15 flex items-center justify-center mb-2">
-              <Trophy className="w-4.5 h-4.5 text-success" />
+              <Trophy className="w-5 h-5 text-success" />
             </div>
             <span className="text-lg font-bold text-foreground">{prCount.toLocaleString("fa-IR")}</span>
             <span className="text-[9px] text-foreground/40 mt-0.5">رکورد جدید</span>
           </Link>
 
-          <Link href="/calendar" className="bento-cell p-3 flex flex-col items-center justify-center text-center">
+          <Link href="/calendar" className="glass-card p-3 flex flex-col items-center justify-center text-center haptic-ready">
             <div className="w-9 h-9 rounded-xl bg-warning/15 flex items-center justify-center mb-2">
-              <Target className="w-4.5 h-4.5 text-warning" />
+              <Target className="w-5 h-5 text-warning" />
             </div>
             <span className="text-lg font-bold text-foreground">{totalVolume >= 1000 ? `${Math.round(totalVolume / 1000).toLocaleString("fa-IR")}K` : totalVolume.toLocaleString("fa-IR")}</span>
             <span className="text-[9px] text-foreground/40 mt-0.5">حجم (kg)</span>
@@ -508,7 +516,7 @@ export default function HomePage() {
       {/* ── Upcoming Session / My Reservations ── */}
       <motion.div variants={itemVariants}>
         <Link href="/bookings" className="block">
-          <div className="relative overflow-hidden rounded-2xl p-4 bg-gradient-to-l from-primary/15 via-primary/8 to-transparent border border-primary/20 haptic-ready">
+          <div className="glass-card p-4 haptic-ready">
             <div className="flex items-center gap-3">
               <div className="w-11 h-11 rounded-xl bg-primary/20 flex items-center justify-center shrink-0">
                 <Flame className="w-5 h-5 text-primary" />
@@ -539,19 +547,19 @@ export default function HomePage() {
         </div>
         <div className="grid grid-cols-4 gap-2.5">
           {[
-            { icon: Search, label: "اکسپلور", href: "/explore", color: "bg-primary/15", iconColor: "text-primary" },
-            { icon: CalendarDays, label: "رزروها", href: "/bookings", color: "bg-success/15", iconColor: "text-success" },
-            { icon: BarChart3, label: "آمار", href: "/analytics", color: "bg-chart-purple/15", iconColor: "text-chart-purple" },
-            { icon: Wallet, label: "کیف پول", href: "/wallet", color: "bg-warning/15", iconColor: "text-warning" },
-            { icon: UserPlus, label: "دعوت", href: "/referral", color: "bg-info/15", iconColor: "text-info" },
-            { icon: Award, label: "رکوردها", href: "/pr", color: "bg-warning/15", iconColor: "text-warning" },
-            { icon: Users, label: "فید", href: "/community", color: "bg-destructive/15", iconColor: "text-destructive" },
-            { icon: Dumbbell, label: "حرکات", href: "/exercises", color: "bg-success/15", iconColor: "text-success" },
+            { icon: Search, label: "اکسپلور", href: "/explore", color: "bg-primary/10", iconColor: "text-primary" },
+            { icon: CalendarDays, label: "رزروها", href: "/bookings", color: "bg-success/10", iconColor: "text-success" },
+            { icon: BarChart3, label: "آمار", href: "/analytics", color: "bg-chart-purple/10", iconColor: "text-chart-purple" },
+            { icon: Wallet, label: "کیف پول", href: "/wallet", color: "bg-warning/10", iconColor: "text-warning" },
+            { icon: UserPlus, label: "دعوت", href: "/referral", color: "bg-info/10", iconColor: "text-info" },
+            { icon: Award, label: "رکوردها", href: "/pr", color: "bg-warning/10", iconColor: "text-warning" },
+            { icon: Users, label: "فید", href: "/community", color: "bg-destructive/10", iconColor: "text-destructive" },
+            { icon: Dumbbell, label: "حرکات", href: "/exercises", color: "bg-success/10", iconColor: "text-success" },
           ].map((action) => (
             <Link key={action.label} href={action.href}>
-              <div className="bento-cell p-3 flex flex-col items-center gap-2 haptic-ready">
+              <div className="glass-card p-3 flex flex-col items-center gap-2 haptic-ready">
                 <div className={`w-9 h-9 rounded-xl ${action.color} flex items-center justify-center`}>
-                  <action.icon className={`w-4 h-4 ${action.iconColor}`} />
+                  <action.icon className={`w-5 h-5 ${action.iconColor}`} />
                 </div>
                 <span className="text-[11px] font-bold text-foreground/50 text-center leading-tight">
                   {action.label}
@@ -565,7 +573,7 @@ export default function HomePage() {
       {/* ── Smart Workout Builder ── */}
       <motion.div variants={itemVariants}>
         <Link href="/workout-builder" className="block">
-          <div className="relative overflow-hidden rounded-2xl p-4 bg-gradient-to-l from-chart-purple/20 via-chart-purple/10 to-transparent border border-chart-purple/20 haptic-ready">
+          <div className="glass-card p-4 haptic-ready border-primary/20">
             <div className="flex items-center gap-3">
               <div className="w-11 h-11 rounded-xl bg-chart-purple/20 flex items-center justify-center shrink-0">
                 <Sparkles className="w-5 h-5 text-chart-purple" />
@@ -589,11 +597,11 @@ export default function HomePage() {
           </Link>
         </div>
 
-        <div className="space-y-5 stagger-children">
+        <div className="space-y-4 stagger-children">
           {popularGyms.map((gym) => (
             <Link key={gym.id} href={`/explore/${gym.id}`}>
-              <div className="glass-card p-3.5 haptic-ready flex items-center gap-3 my-[5px]">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-white/8 to-white/3 flex items-center justify-center shrink-0">
+              <div className="glass-card p-3.5 haptic-ready flex items-center gap-3">
+                <div className="w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center shrink-0 border border-white/5">
                   <TrendingUp className="w-5 h-5 text-foreground/20" />
                 </div>
                 <div className="flex-1 min-w-0">
@@ -622,7 +630,7 @@ export default function HomePage() {
           ))}
 
           {popularGyms.length === 0 && (
-            <div className="glass-card p-8 text-center">
+            <div className="glass-card p-8 text-center border-dashed">
               <p className="text-sm text-foreground/30">باشگاهی یافت نشد</p>
             </div>
           )}

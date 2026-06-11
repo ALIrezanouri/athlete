@@ -4,7 +4,6 @@ import React, { useState, useEffect, useTransition, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import { motion, AnimatePresence } from "motion/react"
 import { useGlobalEngine } from "@/lib/GlobalEngineContext"
-import { MagicCard } from "@/components/ui/magic-card"
 import { ShinyButton } from "@/components/ui/shiny-button"
 import { GlassInput } from "@/components/auth/glass-input"
 import { completeOnboarding, getGymsForOnboarding } from "@/app/actions/auth"
@@ -25,7 +24,7 @@ interface GymOption {
 // ── Slide Variants ───────────────────────────────────────────────────────────
 const slideVariants = {
   enter: (direction: number) => ({
-    x: direction > 0 ? 300 : -300,
+    x: direction > 0 ? 100 : -100,
     opacity: 0,
   }),
   center: {
@@ -33,7 +32,7 @@ const slideVariants = {
     opacity: 1,
   },
   exit: (direction: number) => ({
-    x: direction < 0 ? 300 : -300,
+    x: direction < 0 ? 100 : -100,
     opacity: 0,
   }),
 }
@@ -187,39 +186,31 @@ export default function OnboardingPage() {
       dir={dir}
     >
       <div className="w-full max-w-sm">
-        <MagicCard
-          className="relative overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03] p-6 backdrop-blur-[10px]"
-          gradientSize={200}
-          gradientColor={STEP_COLORS[step - 1]}
-          gradientOpacity={0.08}
-        >
+        <div className="glass-card p-6 overflow-hidden">
           {/* ── Header ──────────────────────────────────────────────── */}
-          <div className="mb-5 text-center">
+          <div className="mb-6 text-center">
             <div
-              className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl"
-              style={{ backgroundColor: `${STEP_COLORS[step - 1]}15` }}
+              className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 border border-primary/20"
             >
               {React.createElement(STEP_ICONS[step - 1], {
-                className: "h-6 w-6",
-                style: { color: STEP_COLORS[step - 1] },
+                className: "h-6 w-6 text-primary"
               })}
             </div>
             <h1 className="text-xl font-bold text-foreground">
               {t("onboarding.title")}
             </h1>
-            <p className="mt-1 text-sm text-foreground/40">
+            <p className="mt-1 text-sm text-foreground/40 leading-relaxed">
               {t("onboarding.subtitle")}
             </p>
           </div>
 
           {/* ── Progress ─────────────────────────────────────────────── */}
-          <div className="mb-5">
-            {/* Step indicator */}
-            <div className="flex items-center justify-between text-xs text-foreground/40 mb-2">
+          <div className="mb-6">
+            <div className="flex items-center justify-between text-[10px] font-bold text-foreground/30 mb-2 uppercase tracking-widest">
               <span>
-                {locale === "fa" ? `${toPersianNumeral(step)} از ۳` : `${t("onboarding.step")} ${step} ${t("onboarding.of")} 3`}
+                {locale === "fa" ? `${toPersianNumeral(step)} از ۳` : `${t("onboarding.step")} ${step} of 3`}
               </span>
-              <span className="font-medium text-foreground/60">
+              <span>
                 {step === 1
                   ? t("onboarding.step1.title")
                   : step === 2
@@ -228,33 +219,18 @@ export default function OnboardingPage() {
               </span>
             </div>
 
-            {/* Progress bar */}
-            <div className="relative h-1.5 rounded-full bg-white/10">
+            <div className="h-1 w-full bg-white/5 rounded-full overflow-hidden">
               <motion.div
-                className="absolute inset-y-0 left-0 rounded-full"
-                style={{ backgroundColor: STEP_COLORS[step - 1] }}
+                className="h-full bg-primary"
                 initial={{ width: `${((step - 1) / 3) * 100}%` }}
                 animate={{ width: `${progress}%` }}
-                transition={{ duration: 0.4, ease: "easeInOut" }}
+                transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] }}
               />
-              {/* Step dots */}
-              {[1, 2, 3].map((s) => (
-                <div
-                  key={s}
-                  className="absolute top-1/2 -translate-y-1/2 w-3 h-3 rounded-full border-2 transition-colors duration-300"
-                  style={{
-                    left: `${((s - 1) / 2) * 100}%`,
-                    transform: "translate(-50%, -50%)",
-                    backgroundColor: s <= step ? STEP_COLORS[step - 1] : "transparent",
-                    borderColor: s <= step ? STEP_COLORS[step - 1] : "rgba(255,255,255,0.2)",
-                  }}
-                />
-              ))}
             </div>
           </div>
 
           {/* ── Animated Steps ──────────────────────────────────────── */}
-          <div className="relative overflow-hidden" style={{ minHeight: "340px" }}>
+          <div className="relative overflow-hidden" style={{ minHeight: "360px" }}>
             <AnimatePresence mode="wait" custom={direction}>
               {/* ── Step 1: Personal Info ──────────────────────────────── */}
               {step === 1 && (
@@ -266,12 +242,12 @@ export default function OnboardingPage() {
                   animate="center"
                   exit="exit"
                   transition={{ duration: 0.3, ease: "easeInOut" }}
-                  className="flex flex-col gap-4"
+                  className="flex flex-col gap-5"
                   suppressHydrationWarning
                 >
                   {/* Full Name */}
                   <div>
-                    <label className="text-xs text-foreground/40 mb-1 block">
+                    <label className="text-[10px] font-bold text-foreground/40 mb-1.5 block uppercase tracking-wider">
                       {t("onboarding.step1.name")}
                     </label>
                     <GlassInput
@@ -284,11 +260,11 @@ export default function OnboardingPage() {
                   </div>
 
                   {/* Weight & Height */}
-                  <div className="flex gap-3">
+                  <div className="flex gap-4">
                     <div className="flex-1">
-                      <label className="text-xs text-foreground/40 mb-1 block flex items-center gap-1">
+                      <label className="text-[10px] font-bold text-foreground/40 mb-1.5 block flex items-center gap-1 uppercase tracking-wider">
                         <Scale className="w-3 h-3" />
-                        {locale === "fa" ? "وزن (کیلوگرم)" : "Weight (kg)"}
+                        {locale === "fa" ? "وزن (kg)" : "Weight (kg)"}
                       </label>
                       <GlassInput
                         value={weight}
@@ -299,9 +275,9 @@ export default function OnboardingPage() {
                       />
                     </div>
                     <div className="flex-1">
-                      <label className="text-xs text-foreground/40 mb-1 block flex items-center gap-1">
+                      <label className="text-[10px] font-bold text-foreground/40 mb-1.5 block flex items-center gap-1 uppercase tracking-wider">
                         <Ruler className="w-3 h-3" />
-                        {locale === "fa" ? "قد (سانتی‌متر)" : "Height (cm)"}
+                        {locale === "fa" ? "قد (cm)" : "Height (cm)"}
                       </label>
                       <GlassInput
                         value={height}
@@ -315,7 +291,7 @@ export default function OnboardingPage() {
 
                   {/* Gender */}
                   <div>
-                    <label className="text-xs text-foreground/40 mb-1 block">
+                    <label className="text-[10px] font-bold text-foreground/40 mb-1.5 block uppercase tracking-wider">
                       {t("onboarding.step1.gender")}
                     </label>
                     <div className="flex gap-2">
@@ -324,11 +300,11 @@ export default function OnboardingPage() {
                           key={g}
                           onClick={() => setGender(g)}
                           className={`
-                            flex-1 rounded-xl border py-2 text-sm transition-all duration-200
+                            flex-1 rounded-xl border py-2.5 text-xs font-bold transition-all duration-200
                             ${
                               gender === g
-                                ? "border-primary/50 bg-primary/10 text-foreground"
-                                : "border-white/10 bg-white/[0.03] text-foreground/40 hover:border-white/20 hover:text-foreground/60"
+                                ? "border-primary bg-primary/10 text-primary"
+                                : "border-white/5 bg-white/5 text-foreground/40 hover:bg-white/10"
                             }
                           `}
                         >
@@ -339,16 +315,16 @@ export default function OnboardingPage() {
                   </div>
 
                   {/* Saman Insurance Promo */}
-                  <div className="mt-2 rounded-xl border border-success/20 bg-success/5 p-3 flex items-start gap-3">
+                  <div className="rounded-2xl border border-success/20 bg-success/5 p-3.5 flex items-start gap-3">
                     <ShieldCheck className="w-5 h-5 text-success shrink-0 mt-0.5" />
                     <div>
-                      <p className="text-xs font-bold text-success">
-                        {locale === "fa" ? "تخفیف بیمه سامان" : "Saman Insurance Discount"}
+                      <p className="text-[11px] font-black text-success uppercase tracking-wide">
+                        {locale === "fa" ? "تخفیف ویژه بیمه" : "Insurance Reward"}
                       </p>
-                      <p className="text-[10px] text-success/70 leading-relaxed">
+                      <p className="text-[10px] text-success/70 leading-relaxed mt-0.5">
                         {locale === "fa"
-                          ? "با ثبت دقیق اطلاعات، تا ۵۰٪ تخفیف روی بیمه حوادث ورزشی دریافت کنید."
-                          : "By providing accurate data, get up to 50% discount on sports accident insurance."}
+                          ? "با تکمیل اطلاعات، کوین‌های شما به تخفیف بیمه سامان تبدیل می‌شود."
+                          : "Your accurate data unlocks premium insurance discounts via Athlete Coins."}
                       </p>
                     </div>
                   </div>
@@ -365,29 +341,29 @@ export default function OnboardingPage() {
                   animate="center"
                   exit="exit"
                   transition={{ duration: 0.3, ease: "easeInOut" }}
-                  className="flex flex-col gap-4"
+                  className="flex flex-col gap-5"
                   suppressHydrationWarning
                 >
-                  <p className="text-sm text-foreground/50 text-center">
+                  <p className="text-sm text-foreground/40 text-center italic">
                     {t("onboarding.step2.subtitle")}
                   </p>
 
                   {/* Fitness Level */}
                   <div>
-                    <label className="text-xs text-foreground/40 mb-2 block">
+                    <label className="text-[10px] font-bold text-foreground/40 mb-2 block uppercase tracking-wider">
                       {t("onboarding.step2.level")}
                     </label>
-                    <div className="flex gap-2">
+                    <div className="grid grid-cols-2 gap-2">
                       {FITNESS_LEVELS.map((level) => (
                         <button
                           key={level}
                           onClick={() => setFitnessLevel(level)}
                           className={`
-                            flex-1 rounded-xl border py-2.5 text-xs transition-all duration-200
+                            rounded-xl border py-3 text-[11px] font-bold transition-all duration-200
                             ${
                               fitnessLevel === level
-                                ? "border-success/50 bg-success/10 text-foreground"
-                                : "border-white/10 bg-white/[0.03] text-foreground/40 hover:border-white/20 hover:text-foreground/60"
+                                ? "border-success bg-success/10 text-success"
+                                : "border-white/5 bg-white/5 text-foreground/40 hover:bg-white/10"
                             }
                           `}
                         >
@@ -399,7 +375,7 @@ export default function OnboardingPage() {
 
                   {/* Sport Preferences / Goals */}
                   <div>
-                    <label className="text-xs text-foreground/40 mb-2 block">
+                    <label className="text-[10px] font-bold text-foreground/40 mb-2 block uppercase tracking-wider">
                       {t("onboarding.step2.goals")}
                     </label>
                     <div className="flex flex-wrap gap-2">
@@ -408,15 +384,15 @@ export default function OnboardingPage() {
                           key={sport.key}
                           onClick={() => toggleSport(sport.key)}
                           className={`
-                            rounded-xl border px-3 py-2 text-xs transition-all duration-200
+                            rounded-full border px-4 py-2 text-[10px] font-bold transition-all duration-200 flex items-center gap-2
                             ${
                               sportPreferences.includes(sport.key)
-                                ? "border-success/50 bg-success/10 text-foreground"
-                                : "border-white/10 bg-white/[0.03] text-foreground/40 hover:border-white/20 hover:text-foreground/60"
+                                ? "border-success bg-success/10 text-success"
+                                : "border-white/5 bg-white/5 text-foreground/40 hover:bg-white/10"
                             }
                           `}
                         >
-                          <span className="mr-1">{sport.icon}</span>
+                          <span>{sport.icon}</span>
                           {t(`onboarding.step2.${sport.key}`)}
                         </button>
                       ))}
@@ -435,63 +411,48 @@ export default function OnboardingPage() {
                   animate="center"
                   exit="exit"
                   transition={{ duration: 0.3, ease: "easeInOut" }}
-                  className="flex flex-col gap-3"
+                  className="flex flex-col gap-4"
                   suppressHydrationWarning
                 >
-                  <p className="text-sm text-foreground/50 text-center">
+                  <p className="text-sm text-foreground/40 text-center">
                     {t("onboarding.step3.subtitle")}
                   </p>
 
                   {/* Gym List */}
                   {gyms.length === 0 ? (
-                    <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4 text-center text-sm text-foreground/30">
-                      No gyms available yet
+                    <div className="rounded-2xl border border-white/5 bg-white/5 p-12 text-center text-xs text-foreground/20 italic">
+                      در حال جستجوی باشگاه...
                     </div>
                   ) : (
-                    <div className="flex flex-col gap-2 max-h-[240px] overflow-y-auto pr-1 scrollbar-thin">
-                      {/* Skip option */}
-                      <button
-                        onClick={() => setSelectedGym(null)}
-                        className={`
-                          rounded-xl border py-2.5 text-sm transition-all duration-200 text-center
-                          ${
-                            selectedGym === null
-                              ? "border-destructive/50 bg-destructive/10 text-foreground"
-                              : "border-white/10 bg-white/[0.03] text-foreground/40 hover:border-white/20 hover:text-foreground/60"
-                          }
-                        `}
-                      >
-                        {locale === "fa" ? "بدون باشگاه" : "No gym (skip)"}
-                      </button>
-
+                    <div className="flex flex-col gap-2.5 max-h-[280px] overflow-y-auto pr-1 scrollbar-none">
                       {gyms.map((gym) => (
                         <button
                           key={gym.id}
                           onClick={() => setSelectedGym(gym.id)}
                           className={`
-                            rounded-xl border p-3 text-left transition-all duration-200
+                            rounded-2xl border p-4 text-left transition-all duration-200 haptic-ready
                             ${
                               selectedGym === gym.id
-                                ? "border-destructive/50 bg-destructive/10"
-                                : "border-white/10 bg-white/[0.03] hover:border-white/20"
+                                ? "border-primary bg-primary/10"
+                                : "border-white/5 bg-white/5 hover:bg-white/10"
                             }
                           `}
                           dir={dir}
                         >
                           <div className="flex items-center justify-between">
                             <span
-                              className={`text-sm font-medium ${
-                                selectedGym === gym.id ? "text-foreground" : "text-foreground/60"
+                              className={`text-sm font-bold ${
+                                selectedGym === gym.id ? "text-primary" : "text-foreground"
                               }`}
                             >
                               {gym.name}
                             </span>
-                            <div className="flex items-center gap-1 text-xs text-foreground/40">
-                              <Star className="w-3 h-3 fill-warning text-warning" />
+                            <div className="flex items-center gap-1 text-[10px] font-bold text-warning">
+                              <Star className="w-3 h-3 fill-current" />
                               {gym.avg_rating}
                             </div>
                           </div>
-                          <div className="flex items-center gap-1 mt-1 text-xs text-foreground/30">
+                          <div className="flex items-center gap-1 mt-1 text-[10px] text-foreground/30 font-medium">
                             <MapPin className="w-3 h-3" />
                             {gym.area ? `${gym.area}, ${gym.city}` : gym.city}
                           </div>
@@ -511,7 +472,7 @@ export default function OnboardingPage() {
                 initial={{ opacity: 0, y: 5 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0 }}
-                className="mt-4 rounded-lg bg-red-500/10 px-3 py-2 text-center text-xs text-red-400"
+                className="mt-4 rounded-xl bg-destructive/10 px-3 py-2 text-center text-xs font-bold text-destructive"
               >
                 {error}
               </motion.div>
@@ -519,54 +480,53 @@ export default function OnboardingPage() {
           </AnimatePresence>
 
           {/* ── Navigation Buttons ────────────────────────────────────── */}
-          <div className="mt-5 flex gap-3">
+          <div className="mt-8 flex gap-3">
             {step > 1 && (
               <button
                 onClick={handleBack}
-                className="flex items-center gap-1 rounded-xl border border-white/10 bg-white/[0.03] px-4 py-2.5 text-sm text-foreground/50 transition-colors hover:text-foreground/70"
+                className="flex items-center justify-center w-12 h-12 rounded-2xl bg-white/5 text-foreground/40 border border-white/5 haptic-ready"
               >
                 {dir === "rtl" ? (
-                  <ChevronRight className="w-4 h-4" />
+                  <ChevronRight className="w-5 h-5" />
                 ) : (
-                  <ChevronLeft className="w-4 h-4" />
+                  <ChevronLeft className="w-5 h-5" />
                 )}
-                {t("onboarding.back")}
               </button>
             )}
 
             {step < 3 ? (
-              <ShinyButton
+              <button
                 onClick={handleNext}
                 disabled={
                   (step === 1 && !canProceedFromStep1) ||
                   (step === 2 && !canProceedFromStep2)
                 }
-                className={`flex-1 border-[${STEP_COLORS[step - 1]}]/30 py-3`}
+                className="hevy-btn-primary flex-1 py-3 text-sm haptic-ready disabled:opacity-30 disabled:grayscale"
               >
                 {t("onboarding.next")}
-              </ShinyButton>
+              </button>
             ) : (
-              <ShinyButton
+              <button
                 onClick={handleComplete}
                 disabled={isSaving}
-                className="flex-1 border-success/30 py-3"
+                className="hevy-btn-primary flex-1 py-3 text-sm haptic-ready bg-success shadow-success/20 disabled:opacity-30"
               >
                 {isSaving ? t("onboarding.saving") : t("onboarding.complete")}
-              </ShinyButton>
+              </button>
             )}
           </div>
 
           {/* ── Skip Button ─────────────────────────────────────────── */}
-          <div className="mt-3 text-center">
+          <div className="mt-4 text-center">
             <button
               onClick={handleSkip}
               disabled={isSaving}
-              className="text-xs text-foreground/25 transition-colors hover:text-foreground/40 disabled:opacity-50"
+              className="text-[10px] font-bold text-foreground/20 uppercase tracking-widest hover:text-foreground/40 disabled:opacity-50 transition-colors"
             >
               {locale === "fa" ? "رد شدن برای بعد" : "Skip for now"}
             </button>
           </div>
-        </MagicCard>
+        </div>
       </div>
     </div>
   )

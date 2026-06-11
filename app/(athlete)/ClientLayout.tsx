@@ -21,10 +21,10 @@ export default function ClientLayout({
   const pathname = usePathname()
   const isOnboarding = pathname === "/onboarding"
   // Hide bottom nav on detail/sub-pages for immersive experience
-  const hideBottomNav = isOnboarding || /^\/gyms\/[^/]+$/.test(pathname)
+  const hideBottomNav = isOnboarding || /^\/gyms\/[^/]+$/.test(pathname) || pathname === "/referral" || pathname === "/wallet"
 
   return (
-    <div className="flex flex-col min-h-screen bg-black">
+    <div className="flex flex-col min-h-screen bg-background">
       <TopProgressBar />
       <main className={`flex-1 ${hideBottomNav ? "" : "pb-20"}`}>
         <PageErrorBoundary>{children}</PageErrorBoundary>

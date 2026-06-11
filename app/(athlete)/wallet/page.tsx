@@ -18,6 +18,7 @@ import {
 } from "lucide-react"
 import { getWorkoutStats } from "@/app/actions/analytics"
 import { getAthleteLevel } from "@/lib/gamification/engine"
+import { getAthleteCoins, getCoinTransactions } from "@/app/actions/gamification"
 
 interface Transaction {
   id: string
@@ -32,21 +33,44 @@ export default function WalletPage() {
   const router = useRouter()
   const [loading, setLoading] = useState(true)
   const [totalVolume, setTotalVolume] = useState(0)
-
-  // Mock transactions for UI
-  const transactions: Transaction[] = [
-    { id: '1', title: 'تمرین سینه و سرشانه', amount: 50, type: 'gain', date: 'امروز', icon: 'workout' },
-    { id: '2', title: 'دعوت از علی محمدی', amount: 200, type: 'gain', date: 'دیروز', icon: 'referral' },
-    { id: '3', title: 'تخفیف بیمه سامان', amount: 300, type: 'spend', date: '۳ روز پیش', icon: 'insurance' },
-  ]
+  const [balance, setBalance] = useState(0)
+  const [transactions, setTransactions] = useState<Transaction[]>([])
 
   useEffect(() => {
-    getWorkoutStats({ period: "all" }).then(res => {
-      if (res.success && res.stats) {
-        setTotalVolume(res.stats.totalVolume)
+    async function loadData() {
+      const [statsRes, coinsRes, txRes] = await Promise.all([
+        getWorkoutStats({ period: "all" }),
+        getAthleteCoins(),
+        getCoinTransactions(10)
+      ])
+
+      if (statsRes.success && statsRes.stats) {
+        setTotalVolume(statsRes.stats.totalVolume)
+      }
+      if (coinsRes.success) {
+        setBalance(coinsRes.balance ?? 0)
+      }
+      if (txRes.success && txRes.transactions) {
+        setTransactions(txRes.transactions.map((tx: any) => ({
+          id: tx.id,
+          title: tx.description || (tx.transaction_type === 'workout_reward' ? 'پاداش تمرین' : 'تراکنش'),
+          amount: Math.abs(tx.amount),
+          type: tx.amount >= 0 ? 'gain' : 'spend',
+          date: new Date(tx.created_at).toLocaleDateString('fa-IR'),
+          icon: tx.transaction_type === 'workout_reward' ? 'workout' :
+                tx.transaction_type === 'referral_bonus' ? 'referral' : 'insurance'
+        })))
+      } else {
+        // Fallback to mocks if no transactions yet
+        setTransactions([
+          { id: '1', title: 'تمرین سینه و سرشانه', amount: 50, type: 'gain', date: 'امروز', icon: 'workout' },
+          { id: '2', title: 'دعوت از علی محمدی', amount: 200, type: 'gain', date: 'دیروز', icon: 'referral' },
+          { id: '3', title: 'تخفیف بیمه سامان', amount: 300, type: 'spend', date: '۳ روز پیش', icon: 'insurance' },
+        ])
       }
       setLoading(false)
-    })
+    }
+    loadData()
   }, [])
 
   const athleteLevel = getAthleteLevel(totalVolume)
@@ -78,7 +102,7 @@ export default function WalletPage() {
               <span className="text-xs font-bold uppercase tracking-wider">موجودی کوین</span>
             </div>
             <div className="flex items-baseline gap-2">
-              <span className="text-5xl font-black">۴۵۰</span>
+              <span className="text-5xl font-black">{balance.toLocaleString('fa-IR')}</span>
               <span className="text-sm font-bold opacity-60">Athlete Coins</span>
             </div>
 

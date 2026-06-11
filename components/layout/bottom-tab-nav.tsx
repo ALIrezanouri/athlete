@@ -36,18 +36,16 @@ export const BottomTabNav = memo(function BottomTabNav() {
 
   return (
     <>
-      {/* Fade gradient above nav for seamless content blend */}
-      <div className="fixed bottom-0 inset-x-0 z-40 pointer-events-none">
-        <div className="h-20 bg-gradient-to-t from-background to-transparent" />
-      </div>
-
       <nav className="fixed bottom-0 inset-x-0 z-50">
-        <div className="max-w-lg mx-auto px-2 pb-1">
+        <div className="max-w-lg mx-auto px-4 pb-4">
           <div
             className="
-              glass-nav
               flex items-center justify-around
-              h-[68px] rounded-2xl
+              h-[72px] rounded-3xl
+              bg-[rgba(28,28,30,0.7)]
+              backdrop-blur-2xl saturate-150
+              border border-white/10
+              shadow-2xl shadow-black/50
             "
           >
             {tabs.map((tab) => {
@@ -57,7 +55,7 @@ export const BottomTabNav = memo(function BottomTabNav() {
                   : pathname === tab.href || pathname?.startsWith(tab.href + "/")
               const Icon = tab.icon
 
-              // ── Center CTA: Floating workout button ──
+              // ── Center CTA: Apple-style FAB ──
               if (tab.isCenter) {
                 return (
                   <Link
@@ -74,19 +72,12 @@ export const BottomTabNav = memo(function BottomTabNav() {
                         shadow-lg shadow-primary/30
                         ${isActive
                           ? "bg-primary scale-110 shadow-xl shadow-primary/40"
-                          : "bg-primary animate-pulse-glow"
+                          : "bg-primary shadow-lg"
                         }
                       `}
                     >
-                      <Icon className="w-6 h-6 text-foreground" strokeWidth={2.5} />
+                      <Icon className="w-6 h-6 text-white" strokeWidth={3} />
                     </motion.div>
-                    <span
-                      className={`text-xs font-semibold leading-none mt-1 transition-colors duration-200 ${
-                        isActive ? "text-primary" : "text-hevy-text-tertiary"
-                      }`}
-                    >
-                      {t(tab.labelKey)}
-                    </span>
                   </Link>
                 )
               }
@@ -99,48 +90,26 @@ export const BottomTabNav = memo(function BottomTabNav() {
                   onTouchStart={haptic}
                   className={`
                     flex flex-col items-center justify-center flex-1 h-full
-                    relative transition-colors duration-200
-                    ${isActive ? "text-primary" : "text-hevy-text-tertiary active:text-muted-foreground"}
+                    relative transition-all duration-200
+                    ${isActive ? "text-primary" : "text-white/40 active:text-white/20"}
                   `}
                 >
-                  {/* Active indicator dot */}
-                  <div
-                    className={`
-                      absolute top-1 w-1 h-1 rounded-full
-                      bg-primary transition-all duration-300
-                      ${isActive ? "opacity-100 scale-100" : "opacity-0 scale-0"}
-                    `}
-                  />
-
                   <motion.div whileTap={{ scale: 0.85 }} className="relative">
                     <Icon
-                      className={`w-[22px] h-[22px] transition-all duration-200 ${
-                        isActive ? "scale-105" : ""
-                      }`}
-                      strokeWidth={isActive ? 2.2 : 1.5}
+                      className={`w-[24px] h-[24px] transition-all duration-200`}
+                      strokeWidth={isActive ? 2.5 : 2}
                     />
-                    {/* Notification badge */}
                     {tab.badge && tab.badge > 0 && (
-                      <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-destructive rounded-full text-[8px] font-bold text-foreground flex items-center justify-center">
-                        {tab.badge > 9 ? "9+" : tab.badge}
+                      <span className="absolute -top-1 -right-1 w-4 h-4 bg-destructive rounded-full text-[9px] font-bold text-white flex items-center justify-center border-2 border-[rgba(28,28,30,0.7)]">
+                        {tab.badge}
                       </span>
                     )}
                   </motion.div>
-
-                  <span
-                    className={`text-[10px] leading-none mt-1.5 transition-all duration-200 ${
-                      isActive ? "font-semibold" : "font-medium"
-                    }`}
-                  >
-                    {t(tab.labelKey)}
-                  </span>
                 </Link>
               )
             })}
           </div>
         </div>
-
-        {/* Safe area spacer for notched devices */}
         <div className="h-[env(safe-area-inset-bottom)]" />
       </nav>
     </>
