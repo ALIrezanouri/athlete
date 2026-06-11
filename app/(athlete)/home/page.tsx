@@ -20,9 +20,10 @@ import {
   PersonStanding,
   Award,
   BarChart3,
+  Navigation,
 } from "lucide-react"
 import Link from "next/link"
-import { useEffect, useState, useTransition, memo, useCallback } from "react"
+import { useEffect, useState, useTransition, memo } from "react"
 import { getUpcomingBookings, getPopularGyms, getGymSuggestionsForRoutine } from "@/app/actions/gyms"
 import type { GymSuggestion } from "@/app/actions/gyms"
 import { getWorkoutStats } from "@/app/actions/analytics"
@@ -30,7 +31,8 @@ import { getPersonalRecords } from "@/app/actions/analytics"
 import { getActiveWorkout } from "@/app/actions/workouts"
 import { getRoutines } from "@/app/actions/routines"
 import GymSuggestionSheet from "@/components/gym-suggestion/gym-suggestion-sheet"
-import { Loader2, Navigation } from "lucide-react"
+import { BentoGrid, BentoCard } from "@/components/ui/bento-grid"
+import { MagicCard } from "@/components/ui/magic-card"
 
 // ── Animation variants ──
 const containerVariants = {
@@ -72,7 +74,7 @@ const StreakRing = memo(function StreakRing({ days }: { days: number }) {
   return (
     <div className="relative w-16 h-16">
       <svg className="w-full h-full -rotate-90" viewBox="0 0 64 64">
-        <circle cx="32" cy="32" r={radius} fill="none" stroke="#3A3A3C" strokeWidth="4" />
+        <circle cx="32" cy="32" r={radius} fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="4" />
         <circle
           cx="32" cy="32" r={radius}
           fill="none" stroke={ringColor} strokeWidth="4"
@@ -86,7 +88,7 @@ const StreakRing = memo(function StreakRing({ days }: { days: number }) {
         <span className={`text-base font-bold leading-none ${atMilestone ? "text-warning" : "text-foreground"}`}>
           {days.toLocaleString("fa-IR")}
         </span>
-        <span className="text-[7px] text-foreground/40 mt-0.5">
+        <span className="text-[7px] text-foreground/40 mt-0.5 font-medium">
           {atMilestone ? "🎉" : `${current.toLocaleString("fa-IR")} از ${target.toLocaleString("fa-IR")}`}
         </span>
       </div>
@@ -98,16 +100,18 @@ const StreakRing = memo(function StreakRing({ days }: { days: number }) {
 const WeeklyBars = memo(function WeeklyBars({ activeDays }: { activeDays: boolean[] }) {
   const labels = ["ش", "ی", "د", "س", "چ", "پ", "ج"]
   return (
-    <div className="flex items-end justify-between gap-1.5 h-14">
+    <div className="flex items-end justify-between gap-2 h-14 px-1">
       {activeDays.map((active, i) => (
-        <div key={i} className="flex flex-col items-center gap-1.5 flex-1">
-          <div
-            className={`w-full rounded-md transition-all duration-500 ${
-              active ? "bg-primary h-10" : "bg-muted/40 h-2.5"
+        <div key={i} className="flex flex-col items-center gap-1.5 flex-1 group">
+          <motion.div
+            initial={{ height: 0 }}
+            animate={{ height: active ? "2.5rem" : "0.6rem" }}
+            className={`w-full rounded-full transition-all duration-500 ${
+              active ? "bg-primary shadow-sm shadow-primary/20" : "bg-white/5"
             }`}
             style={{ transitionDelay: `${i * 80}ms` }}
           />
-          <span className={`text-[9px] font-medium ${active ? "text-primary" : "text-foreground/30"}`}>
+          <span className={`text-[9px] font-bold ${active ? "text-primary" : "text-foreground/20"}`}>
             {labels[i]}
           </span>
         </div>
@@ -159,7 +163,6 @@ export default function HomePage() {
   // Today's routine suggestion + gym suggestions
   const [todayRoutine, setTodayRoutine] = useState<{ id: string; name: string } | null>(null)
   const [gymSuggestions, setGymSuggestions] = useState<GymSuggestion[]>([])
-  const [gymLoading, setGymLoading] = useState(false)
   const [showGymSheet, setShowGymSheet] = useState(false)
   const [, startTransition] = useTransition()
 
@@ -305,7 +308,7 @@ export default function HomePage() {
 
   return (
     <motion.div
-      className="px-4 pt-12 pb-28 space-y-5 gradient-mesh min-h-screen"
+      className="px-4 pt-12 pb-28 space-y-6 gradient-mesh min-h-screen"
       dir="rtl"
       variants={containerVariants}
       initial="hidden"
@@ -317,11 +320,11 @@ export default function HomePage() {
           <h1 className="text-2xl font-bold text-foreground">
             {getGreeting()} 👋
           </h1>
-          <p className="text-sm text-foreground/40 mt-1">{getMotivation()}</p>
+          <p className="text-sm text-foreground/40 mt-1 font-medium">{getMotivation()}</p>
         </div>
         <div className="flex flex-col items-center gap-0.5">
           <StreakRing days={streak} />
-          <span className="text-[9px] text-primary font-semibold">استریک</span>
+          <span className="text-[10px] text-primary font-bold tracking-tight">استریک</span>
         </div>
       </motion.div>
 
@@ -335,7 +338,7 @@ export default function HomePage() {
             transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
           >
             <Link href="/workout" className="block">
-              <div className="relative overflow-hidden rounded-2xl p-4 bg-gradient-to-l from-primary/20 via-primary/10 to-transparent border border-primary/20 haptic-ready">
+              <div className="relative overflow-hidden rounded-2xl p-4 glass-vibrant border-primary/20 haptic-ready">
                 <span className="absolute top-4 left-4 flex h-2.5 w-2.5">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-success opacity-75" />
                   <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-success" />
@@ -347,11 +350,11 @@ export default function HomePage() {
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-bold text-foreground">{activeWorkout.name}</p>
                     <div className="flex items-center gap-2 mt-0.5">
-                      <span className="text-[10px] text-foreground/50">
+                      <span className="text-[10px] text-foreground/50 font-medium">
                         {activeWorkout.exerciseCount.toLocaleString("fa-IR")} حرکت
                       </span>
                       <span className="text-[10px] text-foreground/20">•</span>
-                      <span className="text-[10px] text-foreground/50 flex items-center gap-1">
+                      <span className="text-[10px] text-foreground/50 flex items-center gap-1 font-medium">
                         <Clock className="w-2.5 h-2.5" />
                         {activeWorkout.elapsed.toLocaleString("fa-IR")} دقیقه
                       </span>
@@ -368,63 +371,65 @@ export default function HomePage() {
       {/* ── Today's Workout Suggestion ── */}
       {todayRoutine && (
         <motion.div variants={itemVariants}>
-          <div className="glass-card p-4 haptic-ready">
-            <div className="flex items-center gap-3">
-              <div className="w-11 h-11 rounded-xl bg-primary/15 flex items-center justify-center shrink-0">
-                <Dumbbell className="w-5 h-5 text-primary" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-[10px] text-foreground/40 font-medium">تمرین امروز</p>
-                <p className="text-sm font-semibold text-foreground truncate">{todayRoutine.name}</p>
+          <MagicCard mode="gradient" gradientFrom="#4F8EF7" gradientTo="#30D158" className="haptic-ready">
+            <div className="p-4">
+              <div className="flex items-center gap-3">
+                <div className="w-11 h-11 rounded-xl bg-primary/15 flex items-center justify-center shrink-0">
+                  <Dumbbell className="w-5 h-5 text-primary" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[10px] text-foreground/40 font-bold uppercase tracking-wider">تمرین پیشنهادی</p>
+                  <p className="text-sm font-bold text-foreground truncate">{todayRoutine.name}</p>
+                </div>
+                {gymSuggestions.length > 0 && (
+                  <button
+                    onClick={handleFindGym}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-primary/20 border border-primary/20 text-xs font-bold text-primary shrink-0 haptic-ready"
+                  >
+                    <Navigation className="w-3.5 h-3.5" />
+                    باشگاه مناسب
+                  </button>
+                )}
               </div>
               {gymSuggestions.length > 0 && (
-                <button
-                  onClick={handleFindGym}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-primary/15 border border-primary/20 text-xs font-medium text-primary shrink-0 haptic-ready"
-                >
-                  <Navigation className="w-3.5 h-3.5" />
-                  باشگاه مناسب
-                </button>
+                <div className="mt-3 space-y-2">
+                  {gymSuggestions.map((suggestion) => (
+                    <Link key={suggestion.gym.id} href={`/explore/${suggestion.gym.id}`}>
+                      <div className="flex items-center gap-2 p-2 rounded-xl bg-white/[0.03] border border-white/[0.06] haptic-ready">
+                        <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                          <MapPin className="w-3.5 h-3.5 text-primary" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs font-semibold text-foreground truncate">{suggestion.gym.name}</p>
+                          <div className="flex items-center gap-1.5 mt-0.5">
+                            <span className="text-[9px] text-success font-bold">
+                              {suggestion.matchScore}% تطابق
+                            </span>
+                            {suggestion.distance && (
+                              <span className="text-[9px] text-foreground/30 font-medium">
+                                {suggestion.distance.toFixed(1).toLocaleString()} km
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        <span className="text-[10px] font-bold text-primary shrink-0">رزرو ←</span>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
               )}
             </div>
-            {gymSuggestions.length > 0 && (
-              <div className="mt-3 space-y-2">
-                {gymSuggestions.map((suggestion) => (
-                  <Link key={suggestion.gym.id} href={`/explore/${suggestion.gym.id}`}>
-                    <div className="flex items-center gap-2 p-2 rounded-xl bg-white/[0.03] border border-white/[0.06] haptic-ready">
-                      <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                        <MapPin className="w-3.5 h-3.5 text-primary" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-xs font-medium text-foreground truncate">{suggestion.gym.name}</p>
-                        <div className="flex items-center gap-1.5 mt-0.5">
-                          <span className="text-[9px] text-success font-semibold">
-                            {suggestion.matchScore}% تطابق
-                          </span>
-                          {suggestion.distance && (
-                            <span className="text-[9px] text-foreground/30">
-                              {suggestion.distance.toFixed(1)} km
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                      <span className="text-[10px] font-bold text-primary shrink-0">رزرو ←</span>
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            )}
-          </div>
+          </MagicCard>
         </motion.div>
       )}
 
       {/* ── Weekly Activity ── */}
       <motion.div variants={itemVariants}>
         <div className="glass-card p-4">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-semibold text-foreground/60">فعالیت هفتگی</span>
-            <span className="text-[10px] text-primary font-medium">
-              {weekActive.filter(Boolean).length} از ۷ روز
+          <div className="flex items-center justify-between mb-4">
+            <span className="text-xs font-bold text-foreground/40 tracking-tight">فعالیت هفتگی</span>
+            <span className="text-[10px] text-primary font-bold">
+              {weekActive.filter(Boolean).length} از ۷ روز فعال
             </span>
           </div>
           <WeeklyBars activeDays={weekActive} />
@@ -433,51 +438,56 @@ export default function HomePage() {
 
       {/* ── Quick Stats — Bento Grid ── */}
       <motion.div variants={itemVariants}>
-        <div className="grid grid-cols-3 gap-3">
-          <Link href="/workout" className="bento-cell p-3 flex flex-col items-center justify-center text-center">
-            <div className="w-9 h-9 rounded-xl bg-primary/15 flex items-center justify-center mb-2">
-              <Dumbbell className="w-4.5 h-4.5 text-primary" />
-            </div>
-            <span className="text-lg font-bold text-foreground">{totalWorkouts.toLocaleString("fa-IR")}</span>
-            <span className="text-[9px] text-foreground/40 mt-0.5">تمرین</span>
-          </Link>
-
-          <Link href="/analytics" className="bento-cell p-3 flex flex-col items-center justify-center text-center">
-            <div className="w-9 h-9 rounded-xl bg-success/15 flex items-center justify-center mb-2">
-              <Trophy className="w-4.5 h-4.5 text-success" />
-            </div>
-            <span className="text-lg font-bold text-foreground">{prCount.toLocaleString("fa-IR")}</span>
-            <span className="text-[9px] text-foreground/40 mt-0.5">رکورد جدید</span>
-          </Link>
-
-          <Link href="/calendar" className="bento-cell p-3 flex flex-col items-center justify-center text-center">
-            <div className="w-9 h-9 rounded-xl bg-warning/15 flex items-center justify-center mb-2">
-              <Target className="w-4.5 h-4.5 text-warning" />
-            </div>
-            <span className="text-lg font-bold text-foreground">{totalVolume >= 1000 ? `${Math.round(totalVolume / 1000).toLocaleString("fa-IR")}K` : totalVolume.toLocaleString("fa-IR")}</span>
-            <span className="text-[9px] text-foreground/40 mt-0.5">حجم (kg)</span>
-          </Link>
-        </div>
+        <BentoGrid className="grid-cols-3 auto-rows-auto">
+          <BentoCard
+            name="تمرینات"
+            description="کل جلسات"
+            Icon={Dumbbell}
+            metric={totalWorkouts.toLocaleString("fa-IR")}
+            className="col-span-1"
+          >
+            <div className="mb-4" />
+          </BentoCard>
+          <BentoCard
+            name="رکوردها"
+            description="مدال‌های کسب شده"
+            Icon={Trophy}
+            metric={prCount.toLocaleString("fa-IR")}
+            className="col-span-1"
+          >
+             <div className="mb-4" />
+          </BentoCard>
+          <BentoCard
+            name="حجم"
+            description="مجموع وزنه"
+            Icon={Target}
+            metric={totalVolume >= 1000 ? `${(totalVolume / 1000).toFixed(1).toLocaleString()}K` : totalVolume.toLocaleString("fa-IR")}
+            metricLabel="کیلو"
+            className="col-span-1"
+          >
+             <div className="mb-4" />
+          </BentoCard>
+        </BentoGrid>
       </motion.div>
 
       {/* ── Upcoming Session / My Reservations ── */}
       <motion.div variants={itemVariants}>
         <Link href="/bookings" className="block">
-          <div className="relative overflow-hidden rounded-2xl p-4 bg-gradient-to-l from-primary/15 via-primary/8 to-transparent border border-primary/20 haptic-ready">
+          <div className="relative overflow-hidden rounded-2xl p-4 bg-gradient-to-l from-primary/10 via-primary/5 to-transparent border border-white/10 haptic-ready">
             <div className="flex items-center gap-3">
               <div className="w-11 h-11 rounded-xl bg-primary/20 flex items-center justify-center shrink-0">
                 <Flame className="w-5 h-5 text-primary" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-[10px] text-foreground/40 font-medium">{t("home.upcomingSession")}</p>
-                <p className="text-sm font-semibold text-foreground truncate">
+                <p className="text-[10px] text-foreground/40 font-bold uppercase tracking-wider">{t("home.upcomingSession")}</p>
+                <p className="text-sm font-bold text-foreground truncate">
                   {upcomingBooking?.gymName || "مشاهده رزروها"}
                 </p>
               </div>
               {upcomingBooking ? (
                 <div className="text-left shrink-0">
-                  <p className="text-[10px] text-primary font-medium">{upcomingBooking.time}</p>
-                  <p className="text-[10px] text-foreground/30">{upcomingBooking.sport}</p>
+                  <p className="text-[10px] text-primary font-bold">{upcomingBooking.time}</p>
+                  <p className="text-[10px] text-foreground/30 font-medium">{upcomingBooking.sport}</p>
                 </div>
               ) : (
                 <span className="text-xs font-bold text-primary shrink-0">رزروها ←</span>
@@ -489,45 +499,49 @@ export default function HomePage() {
 
       {/* ── Quick Actions — 8 Feature Hub ── */}
       <motion.div variants={itemVariants}>
-        <div className="flex items-center justify-between mb-2">
-          <span className="text-sm font-bold text-foreground/60">دسترسی سریع</span>
-        </div>
-        <div className="grid grid-cols-4 gap-2.5">
-          {[
-            { icon: Search, label: "اکسپلور", href: "/explore", color: "bg-primary/15", iconColor: "text-primary" },
-            { icon: CalendarDays, label: "رزروها", href: "/bookings", color: "bg-success/15", iconColor: "text-success" },
-            { icon: BarChart3, label: "آمار", href: "/analytics", color: "bg-chart-purple/15", iconColor: "text-chart-purple" },
-            { icon: Zap, label: "ابزارها", href: "/tools", color: "bg-warning/15", iconColor: "text-warning" },
-            { icon: Award, label: "رکوردها", href: "/pr", color: "bg-warning/15", iconColor: "text-warning" },
-            { icon: PersonStanding, label: "نقشه بدن", href: "/body-map", color: "bg-info/15", iconColor: "text-info" },
-            { icon: Users, label: "فید", href: "/community", color: "bg-destructive/15", iconColor: "text-destructive" },
-            { icon: Dumbbell, label: "حرکات", href: "/exercises", color: "bg-success/15", iconColor: "text-success" },
-          ].map((action) => (
-            <Link key={action.label} href={action.href}>
-              <div className="bento-cell p-3 flex flex-col items-center gap-2 haptic-ready">
-                <div className={`w-9 h-9 rounded-xl ${action.color} flex items-center justify-center`}>
-                  <action.icon className={`w-4 h-4 ${action.iconColor}`} />
-                </div>
-                <span className="text-[11px] font-bold text-foreground/50 text-center leading-tight">
-                  {action.label}
-                </span>
-              </div>
-            </Link>
-          ))}
-        </div>
+        <MagicCard mode="orb" glowFrom="#4F8EF7" glowTo="#BF5AF2" glowSize={300} className="rounded-3xl">
+          <div className="p-4">
+            <div className="flex items-center justify-between mb-4 px-1">
+              <span className="text-xs font-bold text-foreground/40 uppercase tracking-widest">دسترسی سریع</span>
+            </div>
+            <div className="grid grid-cols-4 gap-3">
+              {[
+                { icon: Search, label: "اکسپلور", href: "/explore", color: "bg-primary/15", iconColor: "text-primary" },
+                { icon: CalendarDays, label: "رزروها", href: "/bookings", color: "bg-success/15", iconColor: "text-success" },
+                { icon: BarChart3, label: "آمار", href: "/analytics", color: "bg-chart-purple/15", iconColor: "text-chart-purple" },
+                { icon: Zap, label: "ابزارها", href: "/tools", color: "bg-warning/15", iconColor: "text-warning" },
+                { icon: Award, label: "رکوردها", href: "/pr", color: "bg-warning/15", iconColor: "text-warning" },
+                { icon: PersonStanding, label: "نقشه بدن", href: "/body-map", color: "bg-info/15", iconColor: "text-info" },
+                { icon: Users, label: "فید", href: "/community", color: "bg-destructive/15", iconColor: "text-destructive" },
+                { icon: Dumbbell, label: "حرکات", href: "/exercises", color: "bg-success/15", iconColor: "text-success" },
+              ].map((action) => (
+                <Link key={action.label} href={action.href}>
+                  <div className="flex flex-col items-center gap-2 haptic-ready group">
+                    <div className={`w-11 h-11 rounded-2xl ${action.color} flex items-center justify-center transition-all duration-300 group-hover:scale-110 group-active:scale-90 border border-white/5`}>
+                      <action.icon className={`w-5 h-5 ${action.iconColor}`} strokeWidth={2} />
+                    </div>
+                    <span className="text-[10px] font-bold text-foreground/50 text-center leading-tight">
+                      {action.label}
+                    </span>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </MagicCard>
       </motion.div>
 
       {/* ── Smart Workout Builder ── */}
       <motion.div variants={itemVariants}>
         <Link href="/workout-builder" className="block">
-          <div className="relative overflow-hidden rounded-2xl p-4 bg-gradient-to-l from-chart-purple/20 via-chart-purple/10 to-transparent border border-chart-purple/20 haptic-ready">
+          <div className="relative overflow-hidden rounded-2xl p-4 bg-gradient-to-l from-chart-purple/15 via-chart-purple/5 to-transparent border border-chart-purple/20 haptic-ready">
             <div className="flex items-center gap-3">
               <div className="w-11 h-11 rounded-xl bg-chart-purple/20 flex items-center justify-center shrink-0">
                 <Sparkles className="w-5 h-5 text-chart-purple" />
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-bold text-foreground">ساخت تمرین هوشمند</p>
-                <p className="text-[10px] text-foreground/40 mt-0.5">عضلات + تجهیزات → تمرین سفارشی</p>
+                <p className="text-[10px] text-foreground/40 mt-0.5 font-medium">عضلات + تجهیزات → تمرین سفارشی</p>
               </div>
               <span className="text-xs font-bold text-chart-purple shrink-0">ساخت ←</span>
             </div>
@@ -537,26 +551,26 @@ export default function HomePage() {
 
       {/* ── Popular Gyms ── */}
       <motion.div variants={itemVariants}>
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="text-base font-bold text-foreground">{t("home.popularGyms")}</h2>
-          <Link href="/gyms" className="text-xs font-medium text-primary">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-base font-bold text-foreground tracking-tight">{t("home.popularGyms")}</h2>
+          <Link href="/gyms" className="text-xs font-bold text-primary">
             مشاهده همه ←
           </Link>
         </div>
 
-        <div className="space-y-5 stagger-children">
+        <div className="space-y-4 stagger-children">
           {popularGyms.map((gym) => (
             <Link key={gym.id} href={`/explore/${gym.id}`}>
-              <div className="glass-card p-3.5 haptic-ready flex items-center gap-3 my-[5px]">
+              <div className="glass-card p-3.5 haptic-ready flex items-center gap-3 border border-white/5">
                 <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-white/8 to-white/3 flex items-center justify-center shrink-0">
                   <TrendingUp className="w-5 h-5 text-foreground/20" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between">
-                    <h3 className="text-sm font-semibold text-foreground truncate">{gym.name}</h3>
+                    <h3 className="text-sm font-bold text-foreground truncate">{gym.name}</h3>
                     <div className="flex items-center gap-1 shrink-0 mr-2">
                       <Star className="w-3 h-3 text-warning fill-warning" />
-                      <span className="text-[10px] font-medium text-foreground/50">
+                      <span className="text-[10px] font-bold text-foreground/50">
                         {gym.rating?.toFixed(1) || "—"}
                       </span>
                     </div>
@@ -564,10 +578,10 @@ export default function HomePage() {
                   <div className="flex items-center gap-2 mt-1">
                     <div className="flex items-center gap-1">
                       <MapPin className="w-3 h-3 text-foreground/25" />
-                      <span className="text-[10px] text-foreground/35">{gym.distance || "—"}</span>
+                      <span className="text-[10px] text-foreground/35 font-medium">{gym.distance || "—"}</span>
                     </div>
                     <span className="text-[10px] text-foreground/15">•</span>
-                    <span className="text-[10px] font-semibold text-primary">
+                    <span className="text-[10px] font-bold text-primary">
                       {formatPrice(BigInt(gym.price_per_hour || 0))}
                     </span>
                   </div>
@@ -577,8 +591,8 @@ export default function HomePage() {
           ))}
 
           {popularGyms.length === 0 && (
-            <div className="glass-card p-8 text-center">
-              <p className="text-sm text-foreground/30">باشگاهی یافت نشد</p>
+            <div className="glass-card p-10 text-center border border-dashed border-white/10">
+              <p className="text-sm text-foreground/30 font-medium">باشگاهی در محدوده شما یافت نشد</p>
             </div>
           )}
         </div>
