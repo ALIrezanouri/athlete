@@ -1,0 +1,5 @@
+{
+  "buildCommand": "cd athlete-pwa && npm run build",
+  "outputDirectory": "athlete-pwa/.next",
+  "installCommand": "cd athlete-pwa && npm install"
+}
