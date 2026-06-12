@@ -2,13 +2,20 @@
 
 This directory contains the configuration for the native Android application of Rokhdad FIT, built using [Bubblewrap](https://github.com/GoogleChromeLabs/bubblewrap) as a Trusted Web Activity (TWA).
 
-## Building the App
+## 🚀 Building the App via GitHub Actions
 
-The application is automatically built via GitHub Actions whenever changes are pushed to the `android-app` branch.
+The easiest way to get your APK is to use GitHub Actions:
 
-### Manual Build
+1.  Push your changes to the `android-app` branch.
+2.  Go to the **Actions** tab in your GitHub repository.
+3.  Select the **"Build Android App"** workflow.
+4.  Once completed, scroll down to the **"Artifacts"** section and download `app-release-apk`.
 
-To build the app manually on your machine:
+---
+
+## 💻 Manual Local Build
+
+If you want to build locally on your machine:
 
 1.  Install [Node.js](https://nodejs.org/).
 2.  Install the Bubblewrap CLI:
@@ -19,50 +26,41 @@ To build the app manually on your machine:
     ```bash
     cd android
     ```
-4.  Initialize the project:
+4.  Initialize and Build:
     ```bash
     bubblewrap init --manifest https://athlete-2.vercel.app/manifest.webmanifest
-    ```
-5.  Build the project:
-    ```bash
     bubblewrap build
     ```
 
-## Play Store Publishing
+### 🛠 Troubleshooting: `zlib: unexpected end of file`
 
-To publish the app to Google Play, you need to:
+If you encounter `zlib: unexpected end of file` during the JDK/SDK download process in Bubblewrap, it's likely due to a network interruption or corrupted download.
+
+**Solution: Manual Path Configuration**
+Instead of letting Bubblewrap download the JDK and SDK, you can point it to your existing installations:
+
+1.  Ensure you have **JDK 17** and the **Android SDK** installed.
+2.  Run the configuration update command:
+    ```bash
+    bubblewrap updateConfig --jdkPath "/path/to/your/jdk-17" --androidSdkPath "/path/to/your/android-sdk"
+    ```
+3.  On macOS, your JDK path is often: `/Library/Java/JavaVirtualMachines/temurin-17.jdk/Contents/Home`
+4.  On macOS, your Android SDK path is often: `/Users/YOUR_USERNAME/Library/Android/sdk`
+
+---
+
+## 📦 Play Store Publishing
 
 ### 1. Digital Asset Links (DAL)
 
-Google Play requires verification that you own the domain. You must host a file at:
+The app is configured to look for verification at:
 `https://athlete-2.vercel.app/.well-known/assetlinks.json`
 
-The content should look like this (replace with your actual certificate fingerprint):
+The file is already present in `public/.well-known/assetlinks.json`. **Important:** You must update the `sha256_cert_fingerprints` in that file with the actual fingerprint from your Google Play Console (found under **Setup > App Integrity**).
 
-```json
-[{
-  "relation": ["delegate_permission/common.handle_all_urls"],
-  "target": {
-    "namespace": "android_app",
-    "package_name": "com.rokhdad.athlete",
-    "sha256_cert_fingerprints": [
-      "YOUR_SHA256_FINGERPRINT"
-    ]
-  }
-}]
-```
+### 2. Production Signing
 
-You can find your SHA256 fingerprint in the Google Play Console under **Setup > App Integrity**.
-
-### 2. Signing the App
-
-For a production release, you must sign the APK/AAB with your own keystore. The current GitHub Action uses a temporary signing key for demonstration.
-
-For production builds in CI:
-1.  Generate a keystore file.
-2.  Add the keystore file (base64 encoded) and passwords as GitHub Secrets.
-3.  Update the workflow to use these secrets.
-
-## Configuration
-
-The main configuration is stored in `twa-manifest.json`. If you change the app name, icons, or package ID, update this file and rebuild.
+The current GitHub Action uses a temporary signing key. For production:
+1.  Generate your own keystore: `keytool -genkey -v -keystore my-release-key.keystore -alias my-key-alias ...`
+2.  Update `twa-manifest.json` with your `packageId` and signing details.
+3.  (Recommended) Use GitHub Secrets to store your keystore (base64 encoded) and passwords to keep them secure.

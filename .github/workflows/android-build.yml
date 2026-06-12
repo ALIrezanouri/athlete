@@ -29,6 +29,7 @@ jobs:
       - name: Build with Bubblewrap
         run: |
           mkdir -p ~/.bubblewrap
+          # Use the environment variables provided by GitHub Actions
           echo "{\"jdkPath\":\"$JAVA_HOME\",\"androidSdkPath\":\"$ANDROID_HOME\"}" > ~/.bubblewrap/config.json
 
           # Generate a temporary keystore for CI build
@@ -36,17 +37,15 @@ jobs:
 
           cd android
           # Update twa-manifest to use this keystore and passwords
-          # Use a temporary file to update manifest
           cat twa-manifest.json | jq '.signingKey.password="password" | .signingKey.keyPassword="password"' > twa-manifest.tmp.json && mv twa-manifest.tmp.json twa-manifest.json
 
           # Initialize the project
-          yes | bubblewrap init --manifest https://athlete-2.vercel.app/manifest.webmanifest --directory ./ --metaData ./twa-manifest.json --yes
+          bubblewrap init --manifest https://athlete-2.vercel.app/manifest.webmanifest --directory ./ --metaData ./twa-manifest.json --yes
 
           # Build the APK and AAB
-          yes | bubblewrap build
+          bubblewrap build --yes
         env:
-          JAVA_HOME: /usr/lib/jvm/temurin-17-jdk-amd64
-          ANDROID_HOME: /usr/local/lib/android/sdk
+          NODE_OPTIONS: --no-deprecation
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
