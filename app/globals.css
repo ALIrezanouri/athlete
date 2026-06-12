@@ -1,0 +1,617 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+/* ============================================================
+   Design System: Hevy × Apple Glassmorphism
+   Deep dark + frosted glass (dark mode)
+   Apple system white + frosted glass (light mode)
+   ============================================================ */
+
+/* ── Font Size Scale (+2 bump) ────────────────────────────── */
+:root {
+  /* Base font sizes — bumped +2 from standard */
+  --text-xs: 0.875rem;     /* 14px — was 12px */
+  --text-sm: 1rem;          /* 16px — was 14px */
+  --text-base: 1.125rem;    /* 18px — was 16px */
+  --text-lg: 1.25rem;       /* 20px — was 18px */
+  --text-xl: 1.5rem;        /* 24px — was 20px */
+  --text-2xl: 1.875rem;     /* 30px — was 24px */
+  --text-3xl: 2.25rem;      /* 36px — was 30px */
+  --text-4xl: 3rem;         /* 48px — was 36px */
+
+  /* Line heights to match */
+  --leading-xs: 1.25rem;
+  --leading-sm: 1.5rem;
+  --leading-base: 1.75rem;
+  --leading-lg: 1.75rem;
+  --leading-xl: 2rem;
+  --leading-2xl: 2.25rem;
+  --leading-3xl: 2.5rem;
+  --leading-4xl: 1;
+}
+
+/* ── DARK MODE (Default) ──────────────────────────────────── */
+:root {
+  /* Primary Accent — Hevy Blue */
+  --primary: #4F8EF7;
+  --success: #30D158;
+  --destructive: #FF453A;
+  --warning: #FF9F0A;
+  --info: #64D2FF;
+
+  /* Deep Dark Backgrounds */
+  --hevy-bg: #0A0A0F;
+  --hevy-card: rgba(255, 255, 255, 0.04);
+  --hevy-card-solid: #1A1A22;
+  --hevy-elevated: rgba(255, 255, 255, 0.07);
+  --hevy-elevated-solid: #22222C;
+  --hevy-border: rgba(255, 255, 255, 0.08);
+  --hevy-border-strong: rgba(255, 255, 255, 0.15);
+  --hevy-border-subtle: rgba(255, 255, 255, 0.04);
+
+  /* Glass Surface Colors */
+  --glass-bg: rgba(255, 255, 255, 0.05);
+  --glass-bg-hover: rgba(255, 255, 255, 0.08);
+  --glass-bg-active: rgba(255, 255, 255, 0.12);
+  --glass-border: rgba(255, 255, 255, 0.10);
+  --glass-border-hover: rgba(255, 255, 255, 0.18);
+  --glass-blur: 24px;
+  --glass-saturate: 1.6;
+
+  /* Frosted Nav Glass */
+  --nav-glass-bg: rgba(10, 10, 15, 0.78);
+  --nav-glass-border: rgba(255, 255, 255, 0.08);
+
+  /* Text */
+  --hevy-text-primary: #FFFFFF;
+  --hevy-text-secondary: rgba(255, 255, 255, 0.55);
+  --hevy-text-tertiary: rgba(255, 255, 255, 0.30);
+
+  /* Chart / Analytics Colors */
+  --chart-blue: #4F8EF7;
+  --chart-green: #30D158;
+  --chart-orange: #FF9F0A;
+  --chart-red: #FF453A;
+  --chart-purple: #BF5AF2;
+
+  /* Accent Tints (for icon backgrounds, badges) */
+  --accent-blue-tint: rgba(79, 142, 247, 0.15);
+  --accent-green-tint: rgba(48, 209, 88, 0.15);
+  --accent-orange-tint: rgba(255, 159, 10, 0.15);
+  --accent-red-tint: rgba(255, 69, 58, 0.15);
+  --accent-purple-tint: rgba(191, 90, 242, 0.15);
+  --accent-yellow-tint: rgba(255, 214, 10, 0.15);
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.5);
+  --shadow-glow: 0 0 24px rgba(79, 142, 247, 0.12);
+
+  /* shadcn-compatible variables — Dark Glass */
+  --background: #0A0A0F;
+  --foreground: #FFFFFF;
+  --card: rgba(255, 255, 255, 0.04);
+  --card-foreground: #FFFFFF;
+  --popover: #1A1A22;
+  --popover-foreground: #FFFFFF;
+  --primary-foreground: #FFFFFF;
+  --secondary: rgba(255, 255, 255, 0.07);
+  --secondary-foreground: #FFFFFF;
+  --muted: rgba(255, 255, 255, 0.07);
+  --muted-foreground: rgba(255, 255, 255, 0.55);
+  --accent: rgba(255, 255, 255, 0.07);
+  --accent-foreground: #FFFFFF;
+  --border: rgba(255, 255, 255, 0.08);
+  --input: rgba(255, 255, 255, 0.06);
+  --ring: #4F8EF7;
+  --chart-1: #4F8EF7;
+  --chart-2: #30D158;
+  --chart-3: #FF9F0A;
+  --chart-4: #FF453A;
+  --chart-5: #BF5AF2;
+  --radius: 0.75rem;
+  --sidebar: #0A0A0F;
+  --sidebar-foreground: #FFFFFF;
+  --sidebar-primary: #4F8EF7;
+  --sidebar-primary-foreground: #FFFFFF;
+  --sidebar-accent: rgba(255, 255, 255, 0.07);
+  --sidebar-accent-foreground: #FFFFFF;
+  --sidebar-border: rgba(255, 255, 255, 0.08);
+  --sidebar-ring: #4F8EF7;
+}
+
+@theme {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-primary: var(--primary);
+  --color-success: var(--success);
+  --color-destructive: var(--destructive);
+
+  /* Hevy-specific theme colors */
+  --color-hevy-bg: var(--hevy-bg);
+  --color-hevy-card: var(--hevy-card);
+  --color-hevy-elevated: var(--hevy-elevated);
+  --color-hevy-border: var(--hevy-border);
+  --color-hevy-text-primary: var(--hevy-text-primary);
+  --color-hevy-text-secondary: var(--hevy-text-secondary);
+  --color-hevy-text-tertiary: var(--hevy-text-tertiary);
+  --color-chart-blue: var(--chart-blue);
+  --color-chart-green: var(--chart-green);
+  --color-chart-orange: var(--chart-orange);
+  --color-chart-red: var(--chart-red);
+  --color-chart-purple: var(--chart-purple);
+
+  /* Glass colors */
+  --color-glass-bg: var(--glass-bg);
+  --color-glass-border: var(--glass-border);
+
+  /* Marquee Animation */
+  --animate-marquee: marquee var(--duration) linear infinite;
+  --animate-marquee-vertical: marquee-vertical var(--duration) linear infinite;
+
+  /* Standard shadcn mappings */
+  --font-heading: var(--font-sans);
+  --font-sans: var(--font-sans);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --color-foreground: var(--foreground);
+  --color-background: var(--background);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+body {
+  font-family: var(--font-vazirmatn), var(--font-geist-sans), Arial, Helvetica, sans-serif;
+  background-color: var(--hevy-bg);
+  color: var(--hevy-text-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Marquee Keyframes */
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(calc(-100% - var(--gap))); }
+}
+
+@keyframes marquee-vertical {
+  from { transform: translateY(0); }
+  to { transform: translateY(calc(-100% - var(--gap))); }
+}
+
+/* ============================================================
+   Glassmorphism Utility System
+   ============================================================ */
+
+/* Glass Card — Primary surface */
+.glass-card {
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+  box-shadow: var(--shadow-sm), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  transition: background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.glass-card:hover {
+  background: var(--glass-bg-hover);
+  border-color: var(--glass-border-hover);
+}
+
+/* Glass Nav — Frosted bottom/top navigation */
+.glass-nav {
+  background: var(--nav-glass-bg);
+  backdrop-filter: blur(32px) saturate(1.8);
+  -webkit-backdrop-filter: blur(32px) saturate(1.8);
+  border: 1px solid var(--nav-glass-border);
+  box-shadow: 0 -1px 0 var(--nav-glass-border);
+}
+
+/* ============================================================
+   Hevy × Glass Legacy Utility Classes
+   ============================================================ */
+
+/* Flat Card — upgraded to glass */
+.hevy-card {
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+  box-shadow: var(--shadow-sm), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+.hevy-card:hover {
+  border-color: var(--glass-border-hover);
+  background: var(--glass-bg-hover);
+}
+
+/* Flat Button — Primary */
+.hevy-btn-primary {
+  background: var(--primary);
+  color: #FFFFFF;
+  border-radius: 14px;
+  font-weight: 600;
+  box-shadow: 0 4px 16px rgba(79, 142, 247, 0.2);
+  transition: opacity 0.15s ease, transform 0.1s ease;
+}
+.hevy-btn-primary:hover { opacity: 0.9; }
+.hevy-btn-primary:active { opacity: 0.8; transform: scale(0.98); }
+
+/* Flat Input */
+.hevy-input {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+  color: var(--hevy-text-primary);
+  padding: 12px 16px;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.hevy-input:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(79, 142, 247, 0.12);
+  outline: none;
+}
+.hevy-input::placeholder {
+  color: var(--hevy-text-tertiary);
+}
+
+/* Bottom Sheet Overlay */
+.hevy-overlay {
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+/* Haptic-ready active state */
+.haptic-ready {
+  transition: transform 0.1s ease-in-out, box-shadow 0.1s ease-in-out;
+}
+.haptic-ready:active {
+  transform: scale(0.97);
+}
+
+/* ============================================================
+   Animations — Modern 2025
+   ============================================================ */
+
+/* Skeleton Shimmer */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.skeleton {
+  background: linear-gradient(90deg, var(--glass-bg) 25%, var(--glass-bg-hover) 50%, var(--glass-bg) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+  border-radius: 10px;
+}
+
+/* Slide Up Fade In (used by .stagger-children) */
+@keyframes slideUpFade {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Pulse Glow for CTAs */
+@keyframes pulseGlow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(79, 142, 247, 0.4); }
+  50% { box-shadow: 0 0 24px 4px rgba(79, 142, 247, 0.12); }
+}
+.animate-pulse-glow {
+  animation: pulseGlow 2.5s ease-in-out infinite;
+}
+
+/* Number counter pop */
+@keyframes numPop {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.15); }
+  100% { transform: scale(1); }
+}
+.animate-num-pop {
+  animation: numPop 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Gradient Mesh Background — Dark */
+.gradient-mesh {
+  background:
+    radial-gradient(ellipse at 15% 0%, rgba(79, 142, 247, 0.15) 0%, transparent 50%),
+    radial-gradient(ellipse at 85% 100%, rgba(191, 90, 242, 0.08) 0%, transparent 50%),
+    radial-gradient(ellipse at 50% 50%, rgba(48, 209, 88, 0.04) 0%, transparent 60%),
+    var(--hevy-bg);
+}
+
+/* Bento grid cell */
+.bento-cell {
+  background: var(--glass-bg);
+  backdrop-filter: blur(16px) saturate(1.4);
+  -webkit-backdrop-filter: blur(16px) saturate(1.4);
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+  box-shadow: var(--shadow-sm), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.bento-cell:hover {
+  border-color: rgba(79, 142, 247, 0.25);
+  box-shadow: var(--shadow-glow);
+}
+.bento-cell:active {
+  transform: scale(0.98);
+}
+
+/* Ring progress (SVG circle) */
+.ring-progress {
+  transition: stroke-dashoffset 1s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Heatmap cell */
+.heatmap-cell {
+  border-radius: 3px;
+  transition: transform 0.15s ease, opacity 0.15s ease;
+}
+.heatmap-cell:hover {
+  transform: scale(1.4);
+  z-index: 10;
+}
+
+/* Stagger children animation */
+.stagger-children > * {
+  opacity: 0;
+  animation: slideUpFade 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+.stagger-children > *:nth-child(1) { animation-delay: 0ms; }
+.stagger-children > *:nth-child(2) { animation-delay: 60ms; }
+.stagger-children > *:nth-child(3) { animation-delay: 120ms; }
+.stagger-children > *:nth-child(4) { animation-delay: 180ms; }
+.stagger-children > *:nth-child(5) { animation-delay: 240ms; }
+.stagger-children > *:nth-child(6) { animation-delay: 300ms; }
+.stagger-children > *:nth-child(7) { animation-delay: 360ms; }
+.stagger-children > *:nth-child(8) { animation-delay: 420ms; }
+
+/* Scrollbar — Thin glass */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--glass-border); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: var(--glass-border-hover); }
+
+/* ============================================================
+   LIGHT MODE — Apple Frosted Glass
+   ============================================================ */
+.light {
+  /* Primary Accent — Apple Blue */
+  --primary: #007AFF;
+  --success: #34C759;
+  --destructive: #FF3B30;
+  --warning: #FF9500;
+  --info: #5AC8FA;
+
+  /* Apple System Backgrounds */
+  --hevy-bg: #F2F2F7;
+  --hevy-card: rgba(255, 255, 255, 0.72);
+  --hevy-card-solid: #FFFFFF;
+  --hevy-elevated: rgba(255, 255, 255, 0.85);
+  --hevy-elevated-solid: #FFFFFF;
+  --hevy-border: rgba(0, 0, 0, 0.06);
+  --hevy-border-strong: rgba(0, 0, 0, 0.12);
+  --hevy-border-subtle: rgba(0, 0, 0, 0.04);
+
+  /* Frosted Glass Surface Colors */
+  --glass-bg: rgba(255, 255, 255, 0.65);
+  --glass-bg-hover: rgba(255, 255, 255, 0.80);
+  --glass-bg-active: rgba(255, 255, 255, 0.90);
+  --glass-border: rgba(0, 0, 0, 0.06);
+  --glass-border-hover: rgba(0, 0, 0, 0.12);
+  --glass-blur: 28px;
+  --glass-saturate: 1.8;
+
+  /* Frosted Nav */
+  --nav-glass-bg: rgba(242, 242, 247, 0.78);
+  --nav-glass-border: rgba(0, 0, 0, 0.06);
+
+  /* Text — Apple System Colors */
+  --hevy-text-primary: #1C1C1E;
+  --hevy-text-secondary: rgba(60, 60, 67, 0.60);
+  --hevy-text-tertiary: rgba(60, 60, 67, 0.30);
+
+  /* Chart Colors — Apple */
+  --chart-blue: #007AFF;
+  --chart-green: #34C759;
+  --chart-orange: #FF9500;
+  --chart-red: #FF3B30;
+  --chart-purple: #AF52DE;
+
+  /* Accent Tints — Light */
+  --accent-blue-tint: rgba(0, 122, 255, 0.12);
+  --accent-green-tint: rgba(52, 199, 89, 0.12);
+  --accent-orange-tint: rgba(255, 149, 0, 0.12);
+  --accent-red-tint: rgba(255, 59, 48, 0.12);
+  --accent-purple-tint: rgba(175, 82, 222, 0.12);
+  --accent-yellow-tint: rgba(255, 204, 0, 0.12);
+
+  /* Shadows — Light */
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.10);
+  --shadow-glow: 0 0 24px rgba(0, 122, 255, 0.10);
+
+  /* shadcn-compatible variables — Light Glass */
+  --background: #F2F2F7;
+  --foreground: #1C1C1E;
+  --card: rgba(255, 255, 255, 0.72);
+  --card-foreground: #1C1C1E;
+  --popover: #FFFFFF;
+  --popover-foreground: #1C1C1E;
+  --primary: #007AFF;
+  --primary-foreground: #FFFFFF;
+  --secondary: rgba(0, 0, 0, 0.04);
+  --secondary-foreground: #1C1C1E;
+  --muted: rgba(0, 0, 0, 0.04);
+  --muted-foreground: rgba(60, 60, 67, 0.60);
+  --accent: rgba(0, 0, 0, 0.04);
+  --accent-foreground: #1C1C1E;
+  --destructive: #FF3B30;
+  --border: rgba(0, 0, 0, 0.06);
+  --input: rgba(0, 0, 0, 0.04);
+  --ring: #007AFF;
+  --chart-1: #007AFF;
+  --chart-2: #34C759;
+  --chart-3: #FF9500;
+  --chart-4: #FF3B30;
+  --chart-5: #AF52DE;
+  --sidebar: #F2F2F7;
+  --sidebar-foreground: #1C1C1E;
+  --sidebar-primary: #007AFF;
+  --sidebar-primary-foreground: #FFFFFF;
+  --sidebar-accent: rgba(0, 0, 0, 0.04);
+  --sidebar-accent-foreground: #1C1C1E;
+  --sidebar-border: rgba(0, 0, 0, 0.06);
+  --sidebar-ring: #007AFF;
+}
+
+.light body {
+  background-color: #F2F2F7;
+  color: #1C1C1E;
+}
+
+/* Light mode component overrides */
+.light .glass-card {
+  background: rgba(255, 255, 255, 0.65);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+.light .glass-card:hover {
+  background: rgba(255, 255, 255, 0.80);
+  border-color: rgba(0, 0, 0, 0.10);
+}
+
+.light .glass-nav {
+  background: rgba(242, 242, 247, 0.78);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  box-shadow: 0 -1px 0 rgba(0, 0, 0, 0.06);
+}
+
+.light .hevy-card {
+  background: rgba(255, 255, 255, 0.65);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+.light .hevy-input {
+  background: rgba(255, 255, 255, 0.65);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  color: #1C1C1E;
+}
+.light .hevy-input:focus {
+  border-color: #007AFF;
+  box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.12);
+}
+.light .hevy-input::placeholder {
+  color: rgba(60, 60, 67, 0.30);
+}
+
+.light .gradient-mesh {
+  background:
+    radial-gradient(ellipse at 15% 0%, rgba(0, 122, 255, 0.08) 0%, transparent 50%),
+    radial-gradient(ellipse at 85% 100%, rgba(175, 82, 222, 0.05) 0%, transparent 50%),
+    radial-gradient(ellipse at 50% 50%, rgba(52, 199, 89, 0.03) 0%, transparent 60%),
+    #F2F2F7;
+}
+
+.light .skeleton {
+  background: linear-gradient(90deg, rgba(0, 0, 0, 0.04) 25%, rgba(0, 0, 0, 0.08) 50%, rgba(0, 0, 0, 0.04) 75%);
+  background-size: 200% 100%;
+}
+
+.light .bento-cell {
+  background: rgba(255, 255, 255, 0.65);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+.light .bento-cell:hover {
+  border-color: rgba(0, 122, 255, 0.2);
+  box-shadow: 0 0 24px rgba(0, 122, 255, 0.08);
+}
+
+.light ::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.15);
+}
+.light ::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.25);
+}
+
+.light .hevy-btn-primary {
+  background: #007AFF;
+  box-shadow: 0 4px 16px rgba(0, 122, 255, 0.2);
+}
+
+.light .hevy-overlay {
+  background: rgba(0, 0, 0, 0.25);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  html {
+    @apply font-sans;
+  }
+}
+
+/* ── Body Map Highlighter ── */
+.body-highlighter svg path[role="button"] {
+  cursor: pointer;
+  transition: fill 0.15s ease, stroke 0.15s ease;
+}
+.body-highlighter svg path[role="button"]:hover {
+  fill: rgba(79, 142, 247, 0.18);
+  stroke: rgba(79, 142, 247, 0.5);
+  stroke-width: 1.5;
+}
+.body-highlighter svg path[role="button"][aria-disabled="true"] {
+  cursor: default;
+  opacity: 0.4;
+}
+.body-highlighter svg path[role="button"][aria-disabled="true"]:hover {
+  fill: inherit;
+  stroke: inherit;
+}
