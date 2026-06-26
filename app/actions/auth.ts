@@ -214,6 +214,24 @@ export async function sendOtp(
   const { error } = await supabase.auth.signInWithOtp({ phone: phoneE164 })
 
   if (error) {
+    // Provide actionable guidance for the most common production misconfig
+    const isProviderError =
+      error.message.toLowerCase().includes("unsupported phone provider") ||
+      error.message.toLowerCase().includes("phone provider not enabled") ||
+      error.message.toLowerCase().includes("sms provider")
+
+    if (isProviderError) {
+      console.error("[AUTH] Phone provider not configured. DEV_OTP env var:", process.env.DEV_OTP ? "SET" : "NOT SET")
+      return {
+        success: false,
+        error:
+          "ورود با پیامک فعال نیست. برای فعال‌سازی:\n" +
+          "۱. در Vercel → Settings → Environment Variables متغیر DEV_OTP را با مقدار ۱۲۳۴۵۶ اضافه کنید\n" +
+          "۲. مطمئن شوید Environment = Production انتخاب شده\n" +
+          "۳. یک redeploy انجام دهید\n" +
+          "(Phone auth requires DEV_OTP env var or SMS provider config)",
+      }
+    }
     return { success: false, error: error.message }
   }
   return { success: true, devMode: false }
