@@ -247,9 +247,10 @@ export default function GymSuggestionSheet({
                           {suggestion.missingEquipment.map((eqId) => (
                             <span
                               key={eqId}
-                              className="rounded-full bg-red-500/10 px-2 py-0.5 text-[10px] font-medium text-red-400"
+                              className="flex items-center gap-0.5 rounded-full bg-red-500/10 px-2 py-0.5 text-[10px] font-medium text-red-400"
                             >
-                              {EQUIPMENT_LABELS[eqId] || eqId} ✗
+                              {EQUIPMENT_LABELS[eqId] || eqId}
+                              <X className="inline h-2.5 w-2.5" />
                             </span>
                           ))}
                         </div>

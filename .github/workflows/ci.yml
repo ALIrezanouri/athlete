@@ -1,0 +1,70 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main, staging]
+  push:
+    branches: [main, staging]
+
+jobs:
+  # ─── Lint & Type Check ───
+  quality:
+    name: Lint & Type Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            athlete-pwa/package-lock.json
+            adminpanel/package-lock.json
+
+      # Root app
+      - name: Install root deps
+        run: npm ci
+
+      - name: Lint root
+        run: npm run lint
+
+      - name: Type check root
+        run: npx tsc --noEmit
+
+      # Athlete PWA
+      - name: Install athlete-pwa deps
+        run: cd athlete-pwa && npm ci
+
+      - name: Lint athlete-pwa
+        run: cd athlete-pwa && npm run lint
+
+      - name: Type check athlete-pwa
+        run: cd athlete-pwa && npx tsc --noEmit
+
+  # ─── Build Verification ───
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    needs: quality
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            athlete-pwa/package-lock.json
+
+      # Athlete PWA build (Vercel builds this)
+      - name: Build athlete-pwa
+        run: |
+          cd athlete-pwa
+          npm ci
+          npm run build
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co' }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-key' }}
