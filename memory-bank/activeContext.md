@@ -1,6 +1,38 @@
 # Active Context: Rokhdad FIT Platform
 
 ## Current Work Focus
+**Next.js 16 Warning Cleanup — Turbopack Root + Middleware→Proxy Migration (2026-06-26) ✅ DONE**
+
+### Problem
+`npm run dev` in `athlete-pwa` emitted two warnings on Next.js 16.2.6:
+1. **Multiple lockfiles**: Turbopack auto-detected the parent `rokhdad_FIT/package-lock.json` as workspace root (monorepo with nested apps), instead of the app-local `athlete-pwa/package-lock.json`.
+2. **`middleware` deprecated**: Next.js 16 renamed the `middleware.ts` file convention to `proxy.ts`.
+
+### Fix
+1. **`athlete-pwa/next.config.ts`** — Added `turbopack: { root: path.resolve(__dirname) }` (and `import path from "node:path"`). Pins Turbopack's root to the app directory, silencing the warning and keeping filesystem watching scoped.
+2. **`athlete-pwa/middleware.ts` → `athlete-pwa/proxy.ts`** — Renamed the file and the exported function (`middleware` → `proxy`). The internal helper `lib/supabase/middleware.ts` is left untouched (it's a module, not a file convention). No other files referenced the `middleware.ts` file path directly.
+
+### Verified
+Clean dev server output (port 3000) shows neither warning. Turbopack correctly reports `dir: '.../athlete-pwa'`.
+
+---
+
+**Bug Fix: Empty Gym List — Auth Gate on Public Data (2026-06-26) ✅ FIXED**
+
+### Problem
+The `/gyms` page showed "باشگاهی یافت نشد" (empty state) for users whose session cookie wasn't available. Root cause: 6 public read-only server actions in `athlete-pwa/app/actions/gyms.ts` (`getGyms`, `getGymDetail`, `getSportTypes`, `getGymTimeSlots`, `getGymTimeSlotsForDateRange`, `getPopularGyms`) all called `supabase.auth.getUser()` and returned `{ success: false, error: "Unauthorized" }` when no session existed.
+
+### Fix
+Removed the `getUser()` auth gate from all 6 public actions. They now call their cached fetch helpers directly. The cached helpers already use `createPlainSupabaseClient()` (anon key, no cookies) inside `unstable_cache` — which is correct since they run outside request context.
+
+### Principle Enforced
+**Public catalog data (listings, details, availability) must NOT gate on `getUser()`.** Only user-specific data (bookings, wallet, personal routines, suggestions) requires auth. The RLS policy is the single source of truth for access control — if RLS allows anon reads, the server action should match.
+
+### Files Changed
+- `athlete-pwa/app/actions/gyms.ts` — Removed auth gate from 6 public actions; user-specific actions (`getUpcomingBookings`, `getGymSuggestionsForWorkout`, `getGymSuggestionsForRoutine`) retain auth checks.
+
+---
+
 **Marketing UX Strategy Implementation — Phase 1, 2 & 2.2 COMPLETE**
 
 ### Phase 1 — Hevy-style Home & Profile (✅ Done)
@@ -157,7 +189,7 @@
 1. **Execute Phase 0** — Set up measurement tools, capture baselines
 2. **Execute Phase 1** — Fix N+1 queries, full-table scans, add column selects & pagination
 3. Re-create admin user for admin panel login
-4. Migrate middleware → proxy convention (Next.js 16 deprecation warning)
+4. ~~Migrate middleware → proxy convention (Next.js 16 deprecation warning)~~ ✅ Done (2026-06-26)
 5. Connect Global Engine to Supabase (replace mock translations/flags with live queries)
 6. Set up PWA manifest and service worker
 7. Build onboarding flow (for `onboarding_completed: false` users)

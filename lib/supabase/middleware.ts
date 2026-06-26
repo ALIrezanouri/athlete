@@ -2,7 +2,7 @@ import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
 /** Public paths that don't require authentication */
-const PUBLIC_PATHS = ['/login', '/design-system', '/global-demo']
+const PUBLIC_PATHS = ['/', '/login', '/design-system', '/global-demo']
 
 /** Timeout wrapper — prevents auth check from blocking navigation */
 function withTimeout<T>(
@@ -25,10 +25,15 @@ export async function updateSession(request: NextRequest) {
   )
 
   if (isPublicPath) {
-    // Still need to check if authenticated user hits login → redirect to home
-    // But we can skip this for design-system and global-demo (truly public)
-    const isLogin = request.nextUrl.pathname === '/login' || request.nextUrl.pathname.startsWith('/login/')
-    if (!isLogin) {
+    // For truly public paths (design-system, global-demo), skip auth entirely
+    // For '/' and '/login', we still need to run auth check to redirect
+    // authenticated users to /home (or /onboarding)
+    const isTrulyPublic =
+      request.nextUrl.pathname === '/design-system' ||
+      request.nextUrl.pathname.startsWith('/design-system/') ||
+      request.nextUrl.pathname === '/global-demo' ||
+      request.nextUrl.pathname.startsWith('/global-demo/')
+    if (isTrulyPublic) {
       return NextResponse.next({ request })
     }
   }
@@ -92,6 +97,13 @@ export async function updateSession(request: NextRequest) {
   if (user && request.nextUrl.pathname.startsWith('/login')) {
     const url = request.nextUrl.clone()
     url.pathname = needsOnboarding ? '/onboarding' : '/home'
+    return NextResponse.redirect(url)
+  }
+
+  // Redirect authenticated, onboarded users away from landing page to home
+  if (user && !needsOnboarding && request.nextUrl.pathname === '/') {
+    const url = request.nextUrl.clone()
+    url.pathname = '/home'
     return NextResponse.redirect(url)
   }
 

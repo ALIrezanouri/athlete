@@ -119,6 +119,7 @@ const cachedFetchSportTypes = unstable_cache(
 
 // ── Server Action: Get Sport Types ──────────────────────────────────────────
 // Fetches distinct sport type keys from gym_sport_types table
+// PUBLIC DATA: No auth required — sport types are visible to everyone.
 export async function getSportTypes(): Promise<{
   success: boolean
   error?: string
@@ -127,15 +128,6 @@ export async function getSportTypes(): Promise<{
   // Return cached data if still fresh
   if (_sportTypesCache && Date.now() - _sportTypesCache.ts < GYM_CACHE_TTL_MS) {
     return { success: true, data: _sportTypesCache.data }
-  }
-
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  if (!user) {
-    return { success: false, error: "Unauthorized" }
   }
 
   try {
@@ -305,20 +297,12 @@ const cachedFetchGyms = unstable_cache(
 
 // ── Server Action: Get Gyms ─────────────────────────────────────────────────
 // Fetches gym list with optional filters and related data
+// PUBLIC DATA: No auth required — gym listings are visible to everyone.
 export async function getGyms(filters?: GymFilters): Promise<{
   success: boolean
   error?: string
   data?: GymListItem[]
 }> {
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  if (!user) {
-    return { success: false, error: "Unauthorized" }
-  }
-
   try {
     const filtersJson = JSON.stringify(filters ?? {})
     const gymList = await cachedFetchGyms(filtersJson)
@@ -460,20 +444,12 @@ const cachedFetchGymDetail = unstable_cache(
 
 // ── Server Action: Get Gym Detail ───────────────────────────────────────────
 // Fetches full gym detail with all related data joins
+// PUBLIC DATA: No auth required — gym details are visible to everyone.
 export async function getGymDetail(gymId: string): Promise<{
   success: boolean
   error?: string
   data?: GymDetail
 }> {
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  if (!user) {
-    return { success: false, error: "Unauthorized" }
-  }
-
   try {
     const gymDetail = await cachedFetchGymDetail(gymId)
 
@@ -520,6 +496,7 @@ const cachedFetchGymTimeSlots = unstable_cache(
 )
 
 // ── Server Action: Get Gym Time Slots (single date) ─────────────────────────
+// PUBLIC DATA: No auth required — time slot availability is visible to everyone.
 export async function getGymTimeSlots(
   gymId: string,
   date: string
@@ -528,15 +505,6 @@ export async function getGymTimeSlots(
   error?: string
   data?: TimeSlot[]
 }> {
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  if (!user) {
-    return { success: false, error: "Unauthorized" }
-  }
-
   try {
     const timeSlots = await cachedFetchGymTimeSlots(gymId, date)
     return { success: true, data: timeSlots }
@@ -579,6 +547,7 @@ const cachedFetchGymTimeSlotsForDateRange = unstable_cache(
 )
 
 // ── Server Action: Get Gym Time Slots (date range) ──────────────────────────
+// PUBLIC DATA: No auth required — time slot availability is visible to everyone.
 export async function getGymTimeSlotsForDateRange(
   gymId: string,
   startDate: string,
@@ -588,15 +557,6 @@ export async function getGymTimeSlotsForDateRange(
   error?: string
   data?: TimeSlot[]
 }> {
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  if (!user) {
-    return { success: false, error: "Unauthorized" }
-  }
-
   try {
     const timeSlots = await cachedFetchGymTimeSlotsForDateRange(gymId, startDate, endDate)
     return { success: true, data: timeSlots }
@@ -727,6 +687,7 @@ const cachedFetchPopularGyms = unstable_cache(
 
 // ── Server Action: Get Popular Gyms ─────────────────────────────────────────
 // Returns gyms sorted by rating and review count
+// PUBLIC DATA: No auth required — popular gyms are visible to everyone.
 export async function getPopularGyms(limit: number = 10): Promise<{
   success: boolean
   error?: string
@@ -739,15 +700,6 @@ export async function getPopularGyms(limit: number = 10): Promise<{
     _popularGymsCache.data.length <= limit
   ) {
     return { success: true, data: _popularGymsCache.data.slice(0, limit) }
-  }
-
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  if (!user) {
-    return { success: false, error: "Unauthorized" }
   }
 
   try {

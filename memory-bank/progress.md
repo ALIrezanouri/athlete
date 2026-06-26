@@ -1,5 +1,13 @@
 # Progress: Rokhdad FIT Platform
 
+## Bug Fix: Empty Gym List — Auth Gate on Public Data (2026-06-26) ✅
+- **Root cause**: 6 public read-only gym actions (`getGyms`, `getGymDetail`, `getSportTypes`, `getGymTimeSlots`, `getGymTimeSlotsForDateRange`, `getPopularGyms`) in `athlete-pwa/app/actions/gyms.ts` gated on `supabase.auth.getUser()`, returning `{ success: false, error: "Unauthorized" }` when no session cookie was available. RLS permits anon reads — the server action gate was redundant.
+- **Fix**: Removed `getUser()` auth checks from all 6 public actions. User-specific actions (`getUpcomingBookings`, `getGymSuggestionsForWorkout`, `getGymSuggestionsForRoutine`) retain their auth gates.
+- **Principle**: Public catalog data must NOT gate on `getUser()`. RLS is the single source of truth for access control.
+- **Validated**: `npx tsc --noEmit` passes (exit 0).
+
+---
+
 ## What Works ✅
 - **Design System** (`/design-system`) — Typography, colors, spacing, glass surfaces
 - **Global Engine Demo** (`/global-demo`) — i18n, multi-currency, feature flags, dynamic layout

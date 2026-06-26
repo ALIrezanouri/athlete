@@ -9,6 +9,7 @@ import { ShinyButton } from "@/components/ui/shiny-button"
 import { GlassInput } from "@/components/auth/glass-input"
 import { MobileDrawerSelect } from "@/components/ui/mobile-drawer-select"
 import { sendOtp, verifyOtp, getCountries } from "@/app/actions/auth"
+import { Phone, ChevronRight, ChevronLeft } from "lucide-react"
 
 // ── Types ────────────────────────────────────────────────────────────────────
 type AuthStep = "phone" | "otp"
@@ -204,19 +205,7 @@ export default function LoginPage() {
           {/* ── Header ──────────────────────────────────────────────── */}
           <div className="mb-6 text-center">
             <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10">
-              <svg
-                className="h-6 w-6 text-primary"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth={2}
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"
-                />
-              </svg>
+              <Phone className="h-6 w-6 text-primary" />
             </div>
             <h1 className="text-xl font-bold text-foreground">
               {t("login.title")}
@@ -306,19 +295,11 @@ export default function LoginPage() {
                     onClick={handleBack}
                     className="flex items-center gap-1 text-xs text-foreground/40 transition-colors hover:text-foreground/60"
                   >
-                    <svg
-                      className="h-3 w-3"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d={isRtl ? "M9 5l7 7-7 7" : "M15 19l-7-7 7-7"}
-                      />
-                    </svg>
+                    {isRtl ? (
+                      <ChevronRight className="h-3 w-3" />
+                    ) : (
+                      <ChevronLeft className="h-3 w-3" />
+                    )}
                     {t("login.back")}
                   </button>
 
