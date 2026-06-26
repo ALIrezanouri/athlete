@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import path from "node:path";
 
 const securityHeaders = [
   {
@@ -85,6 +86,15 @@ const nextConfig: NextConfig = {
       "tailwind-merge",
       "date-fns",
     ],
+  },
+
+  // Explicitly set the Turbopack root to this app directory.
+  // The repo contains multiple lockfiles (monorepo: root + athlete-pwa),
+  // so Turbopack would otherwise infer the parent directory as the root.
+  // Pinning it here silences the "multiple lockfiles" warning and keeps
+  // filesystem watching scoped to this app.
+  turbopack: {
+    root: path.resolve(__dirname),
   },
 };
 
