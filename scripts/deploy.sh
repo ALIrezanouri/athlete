@@ -364,6 +364,13 @@ create_pr_for_repo() {
 
   # Create feature branch
   local branch="${BRANCH_NAME}"
+
+  # Safety: delete existing local branch with same name if it exists
+  # (handles re-runs where a previous attempt left a branch behind)
+  if ! $DRY_RUN; then
+    git branch -D "$branch" 2>/dev/null || true
+  fi
+
   log_info "Creating branch: ${branch}"
   run "git checkout -b ${branch}"
 
@@ -697,15 +704,31 @@ main() {
   if $DIRECT_PUSH; then
     # ─── DIRECT PUSH MODE ───
     log_step "Direct Push to ${TARGET_BRANCH}"
-    direct_push_to_repo "$BACKUP_REMOTE_NAME" "$BACKUP_REPO_SLUG" "BACKUP"
+
+    # STEP 1: Push to BACKUP first (fail-stop if it fails)
+    direct_push_to_repo "$BACKUP_REMOTE_NAME" "$BACKUP_REPO_SLUG" "BACKUP" || {
+      log_error "BACKUP push failed — ABORTING deploy to Vercel."
+      log_error "Code will NOT be pushed to athlete/Vercel until backup succeeds."
+      exit 1
+    }
+
+    # STEP 2: Only push to DEPLOY after backup is confirmed safe
     direct_push_to_repo "$DEPLOY_REMOTE_NAME" "$DEPLOY_REPO_SLUG" "DEPLOY + VERCEL"
   else
     # ─── PR MODE ───
     log_step "Create Pull Requests → ${TARGET_BRANCH}"
-    create_pr_for_repo "$BACKUP_REMOTE_NAME" "$BACKUP_REPO_SLUG" "BACKUP"
+
+    # STEP 1: Create PR on BACKUP first (fail-stop if it fails)
+    create_pr_for_repo "$BACKUP_REMOTE_NAME" "$BACKUP_REPO_SLUG" "BACKUP" || {
+      log_error "BACKUP PR creation failed — ABORTING deploy PR to Vercel."
+      log_error "Code will NOT be pushed to athlete/Vercel until backup PR succeeds."
+      exit 1
+    }
+
+    # STEP 2: Only create DEPLOY PR after backup is confirmed safe
     create_pr_for_repo "$DEPLOY_REMOTE_NAME" "$DEPLOY_REPO_SLUG" "DEPLOY + VERCEL"
 
-    # Cleanup: merge the local branches back or delete them
+    # Cleanup: delete the local deploy branch
     if ! $DRY_RUN; then
       git branch -D "$BRANCH_NAME" 2>/dev/null || true
     fi
