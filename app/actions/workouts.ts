@@ -407,6 +407,8 @@ export async function completeWorkout(params: {
 }): Promise<{
   success: boolean
   error?: string
+  gamification?: import("./gamification").WorkoutCompletionResult
+  newAchievements?: import("./achievements").UnlockedAchievement[]
 }> {
   const { user, supabase } = await getAuthUser()
   if (!user) return { success: false, error: "Unauthorized" }
@@ -459,7 +461,83 @@ export async function completeWorkout(params: {
     return { success: false, error: "Failed to complete workout" }
   }
 
-  return { success: true }
+  // ── Gamification: award XP + update streak (gated by feature flag) ──
+  let gamification: import("./gamification").WorkoutCompletionResult | undefined;
+  try {
+    const { data: flag } = await supabase
+      .from("feature_flags")
+      .select("is_enabled")
+      .eq("feature_key", "gamification_xp_levels")
+      .single();
+
+    if (flag?.is_enabled) {
+      const { data: gResult, error: gError } = await supabase.rpc(
+        "process_workout_completion",
+        { p_session_id: params.sessionId }
+      );
+      if (gError) {
+        console.error("[WORKOUTS] Gamification RPC error:", gError.message);
+      } else if (gResult) {
+        gamification = gResult;
+      }
+    }
+  } catch (gErr) {
+    // Gamification is best-effort — never block workout completion
+    console.error("[WORKOUTS] Gamification failed (non-blocking):", gErr);
+  }
+
+  // ── Challenges: update progress (gated by feature flag) ──
+  try {
+    const { data: chFlag } = await supabase
+      .from("feature_flags")
+      .select("is_enabled")
+      .eq("feature_key", "gamification_challenges")
+      .single();
+
+    if (chFlag?.is_enabled) {
+      // Increment workout_count and total_sets challenges
+      await supabase.rpc("update_challenge_progress", {
+        p_user_id: user.id,
+        p_goal_type: "workout_count",
+        p_increment: 1,
+      });
+      if (completedSets > 0) {
+        await supabase.rpc("update_challenge_progress", {
+          p_user_id: user.id,
+          p_goal_type: "total_sets",
+          p_increment: completedSets,
+        });
+      }
+    }
+  } catch (chErr) {
+    console.error("[WORKOUTS] Challenge progress update failed (non-blocking):", chErr);
+  }
+
+  // ── Achievements: evaluate & unlock (gated by feature flag) ──
+  let newAchievements: import("./achievements").UnlockedAchievement[] | undefined;
+  try {
+    const { data: achFlag } = await supabase
+      .from("feature_flags")
+      .select("is_enabled")
+      .eq("feature_key", "gamification_achievements")
+      .single();
+
+    if (achFlag?.is_enabled) {
+      const { data: achResult, error: achError } = await supabase.rpc(
+        "evaluate_user_achievements",
+        { p_user_id: user.id }
+      );
+      if (achError) {
+        console.error("[WORKOUTS] Achievement eval error:", achError.message);
+      } else if (achResult && achResult.length > 0) {
+        newAchievements = achResult;
+      }
+    }
+  } catch (achErr) {
+    console.error("[WORKOUTS] Achievement eval failed (non-blocking):", achErr);
+  }
+
+  return { success: true, gamification, newAchievements };
 }
 
 // ── Server Action: Discard Workout ─────────────────────────────────────────

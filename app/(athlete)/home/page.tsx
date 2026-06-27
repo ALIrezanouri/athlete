@@ -29,6 +29,8 @@ import { getWorkoutStats } from "@/app/actions/analytics"
 import { getPersonalRecords } from "@/app/actions/analytics"
 import { getActiveWorkout } from "@/app/actions/workouts"
 import { getRoutines } from "@/app/actions/routines"
+import { getGamificationProfile, isGamificationEnabled } from "@/app/actions/gamification"
+import { LevelRing } from "@/components/gamification/LevelRing"
 import GymSuggestionSheet from "@/components/gym-suggestion/gym-suggestion-sheet"
 import { Loader2, Navigation } from "lucide-react"
 
@@ -162,6 +164,10 @@ export default function HomePage() {
   const [gymLoading, setGymLoading] = useState(false)
   const [showGymSheet, setShowGymSheet] = useState(false)
   const [, startTransition] = useTransition()
+  // Gamification
+  const [gamificationEnabled, setGamificationEnabled] = useState(false)
+  const [level, setLevel] = useState(1)
+  const [levelProgress, setLevelProgress] = useState(0)
 
   useEffect(() => {
     async function fetchData() {
@@ -319,9 +325,17 @@ export default function HomePage() {
           </h1>
           <p className="text-sm text-foreground/40 mt-1">{getMotivation()}</p>
         </div>
-        <div className="flex flex-col items-center gap-0.5">
-          <StreakRing days={streak} />
-          <span className="text-[9px] text-primary font-semibold">استریک</span>
+        <div className="flex items-center gap-3">
+          {gamificationEnabled && (
+            <div className="flex flex-col items-center gap-0.5">
+              <LevelRing level={level} progress={levelProgress} size={56} strokeWidth={5} compact />
+              <span className="text-[9px] text-amber-500 font-semibold">سطح</span>
+            </div>
+          )}
+          <div className="flex flex-col items-center gap-0.5">
+            <StreakRing days={streak} />
+            <span className="text-[9px] text-primary font-semibold">استریک</span>
+          </div>
         </div>
       </motion.div>
 
