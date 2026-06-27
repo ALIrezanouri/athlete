@@ -40,6 +40,7 @@ import { getProfile, updateProfile } from "@/app/actions/profile";
 import { getWallet, getTransactions, topUpWallet } from "@/app/actions/wallet";
 import { getWorkoutStats } from "@/app/actions/analytics";
 import { getPersonalRecords } from "@/app/actions/analytics";
+import { getGamificationProfile, isGamificationEnabled } from "@/app/actions/gamification";
 import { signOut } from "@/app/actions/auth";
 import { getBookings } from "@/app/actions/bookings";
 import { useGlobalEngine } from "@/lib/GlobalEngineContext";
@@ -107,14 +108,21 @@ export default function ProfilePage() {
   const [selectedTopUpAmount, setSelectedTopUpAmount] = useState(0);
   const [comingSoonToast, setComingSoonToast] = useState<string | null>(null);
   const [upcomingBookingsCount, setUpcomingBookingsCount] = useState(0);
+  // Gamification
+  const [gamificationEnabled, setGamificationEnabled] = useState(false);
+  const [level, setLevel] = useState(1);
+  const [totalXP, setTotalXP] = useState(0);
+  const [levelProgress, setLevelProgress] = useState(0);
+  const [xpIntoLevel, setXpIntoLevel] = useState(0);
+  const [xpForNextLevel, setXpForNextLevel] = useState(100);
 
   useEffect(() => {
     async function fetchData() {
       setIsLoading(true);
       setFetchError(null);
       try {
-        // Parallelize all 6 independent server action calls
-        const [profileResult, walletResult, txResult, statsResult, prResult, bookingsResult] =
+        // Parallelize all 7 independent server action calls
+        const [profileResult, walletResult, txResult, statsResult, prResult, bookingsResult, gEnabledResult] =
           await Promise.all([
             getProfile(),
             getWallet(),
@@ -122,7 +130,21 @@ export default function ProfilePage() {
             getWorkoutStats({ period: "all" }),
             getPersonalRecords(),
             getBookings(),
+            isGamificationEnabled(),
           ]);
+
+        // Gamification profile (gated by feature flag)
+        setGamificationEnabled(gEnabledResult);
+        if (gEnabledResult) {
+          const gProfile = await getGamificationProfile();
+          if (gProfile.success && gProfile.data) {
+            setLevel(gProfile.data.current_level);
+            setTotalXP(gProfile.data.total_xp);
+            setLevelProgress(gProfile.data.level_progress);
+            setXpIntoLevel(gProfile.data.xp_into_level);
+            setXpForNextLevel(gProfile.data.xp_for_next_level);
+          }
+        }
 
         // Handle profile result
         if (!profileResult.success || !profileResult.profile) throw new Error(profileResult.error || "Failed");
@@ -288,6 +310,39 @@ export default function ProfilePage() {
           </div>
         </div>
       </motion.div>
+
+      {/* ── Gamification Card ── */}
+      {gamificationEnabled && (
+        <motion.div variants={itemVariants} className="px-4 mt-4">
+          <div className="glass-card p-4 relative overflow-hidden">
+            <div className="flex items-center gap-4">
+              <div className="relative shrink-0">
+                <div className="w-16 h-16 rounded-full bg-gradient-to-br from-amber-500/20 to-orange-500/10 border-2 border-amber-500/30 flex items-center justify-center">
+                  <span className="text-2xl font-bold text-amber-500">{level.toLocaleString("fa-IR")}</span>
+                </div>
+                <span className="absolute -top-1 -right-1 text-xs">🏆</span>
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-sm font-bold text-foreground">سطح {level.toLocaleString("fa-IR")}</span>
+                  <span className="text-[10px] text-foreground/40">
+                    {totalXP.toLocaleString("fa-IR")} XP کل
+                  </span>
+                </div>
+                <div className="h-2 rounded-full bg-white/5 overflow-hidden">
+                  <div
+                    className="h-full rounded-full bg-gradient-to-l from-amber-500 to-orange-500 transition-all duration-700"
+                    style={{ width: `${levelProgress * 100}%` }}
+                  />
+                </div>
+                <p className="text-[10px] text-foreground/30 mt-1">
+                  {xpIntoLevel.toLocaleString("fa-IR")} / {xpForNextLevel.toLocaleString("fa-IR")} XP تا سطح بعد
+                </p>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+      )}
 
       {/* ── Stats Bento ── */}
       <motion.div variants={itemVariants} className="px-4 mt-4">
